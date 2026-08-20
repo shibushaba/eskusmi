@@ -5,29 +5,49 @@ import type { PresenceStatus } from "../../types/user";
 type PanelHeaderProps = {
   trailing?: React.ReactNode;
   drag?: boolean;
+  /** When false, just a drag strip + trailing action — the orb is the brand. */
+  brand?: boolean;
 };
 
-export function PanelHeader({ trailing, drag = true }: PanelHeaderProps) {
+export function PanelHeader({
+  trailing,
+  drag = true,
+  brand = true,
+}: PanelHeaderProps) {
   const dragProps = drag ? ({ "data-tauri-drag-region": true } as const) : {};
 
   return (
     <>
       <header
-        className="flex h-11 shrink-0 items-center gap-2.5 px-3.5"
+        className={
+          brand
+            ? "flex h-11 shrink-0 items-center gap-2.5 px-3.5"
+            : "flex h-9 shrink-0 items-center px-1.5"
+        }
         {...dragProps}
       >
-        <span
-          className="flex h-6 w-6 items-center justify-center rounded-full border border-[color:var(--color-esk-border)] text-[0.74rem] font-light leading-none text-[color:var(--color-esk-text)]"
-          {...dragProps}
-        >
-          e
-        </span>
-        <span className="esk-title flex-1" {...dragProps}>
-          eskusmi
-        </span>
+        {brand ? (
+          <>
+            <span
+              className="eskusmi-orb flex h-6 w-6 items-center justify-center"
+              {...dragProps}
+            >
+              <span className="eskusmi-orb__mark text-[0.7rem] font-light leading-none text-[color:var(--color-esk-text)]">
+                e
+              </span>
+            </span>
+            <span className="esk-title flex-1" {...dragProps}>
+              eskusmi
+            </span>
+          </>
+        ) : (
+          <span className="h-full min-w-0 flex-1" {...dragProps} />
+        )}
         {trailing}
       </header>
-      <div className="mx-3.5 h-px bg-[color:var(--color-esk-divider)]" />
+      {brand ? (
+        <div className="mx-3.5 h-px bg-[color:var(--color-esk-divider)]" />
+      ) : null}
     </>
   );
 }

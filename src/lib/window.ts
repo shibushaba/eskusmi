@@ -7,8 +7,10 @@ import {
   primaryMonitor,
 } from "@tauri-apps/api/window";
 
-export const COLLAPSED_SIZE = { width: 60, height: 60 } as const;
-export const EXPANDED_SIZE = { width: 360, height: 420 } as const;
+/** Native window size for the collapsed orb — also the FAB slot when expanded. */
+export const FAB_SLOT = { width: 60, height: 60 } as const;
+export const COLLAPSED_SIZE = FAB_SLOT;
+export const EXPANDED_SIZE = { width: 320, height: 444 } as const;
 export const SETUP_SIZE = { width: 320, height: 220 } as const;
 export const ATTENTION_SIZE = { width: 320, height: 320 } as const;
 

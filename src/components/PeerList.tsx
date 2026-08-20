@@ -10,6 +10,36 @@ type PeerListProps = {
   onPing: (peerId: string) => void;
 };
 
+function NearbyEmpty({
+  title,
+  detail,
+  searching = false,
+}: {
+  title: string;
+  detail: string;
+  searching?: boolean;
+}) {
+  return (
+    <div className="flex h-full min-h-[7.5rem] flex-col">
+      <p className="esk-label px-0.5">Nearby</p>
+      <div className="flex flex-1 flex-col items-center justify-center px-3 text-center">
+        <span
+          aria-hidden="true"
+          className={searching ? "esk-radar" : "esk-radar esk-radar--still"}
+        >
+          <span className="esk-radar__ring" />
+          <span className="esk-radar__ring esk-radar__ring--delay" />
+          <span className="esk-radar__core" />
+        </span>
+        <p className="mt-3 text-[0.78rem] font-medium tracking-wide text-[color:var(--color-esk-text)]">
+          {title}
+        </p>
+        <p className="esk-meta mt-1.5 max-w-[16rem] leading-relaxed">{detail}</p>
+      </div>
+    </div>
+  );
+}
+
 export function PeerList({
   peers,
   networkStatus,
@@ -18,58 +48,46 @@ export function PeerList({
 }: PeerListProps) {
   if (networkStatus.state === "offline" || networkStatus.state === "starting") {
     return (
-      <div className="px-1 py-2">
-        <p className="esk-label mb-2">People nearby</p>
-        <p className="text-[0.78rem] font-medium tracking-wide text-[color:var(--color-esk-text)]">
-          {networkStatus.state === "starting"
-            ? "Starting network..."
-            : "Network unavailable"}
-        </p>
-        <p className="esk-meta mt-1.5 leading-relaxed">
-          {networkStatus.state === "starting" ? (
-            <span className="esk-searching">eskusmi is getting ready.</span>
-          ) : (
-            "Your profile still works. Discovery could not start."
-          )}
-        </p>
-      </div>
+      <NearbyEmpty
+        searching={networkStatus.state === "starting"}
+        title={
+          networkStatus.state === "starting"
+            ? "Starting up"
+            : "Network unavailable"
+        }
+        detail={
+          networkStatus.state === "starting"
+            ? "Getting ready to look around."
+            : "Your profile still works. Discovery could not start."
+        }
+      />
     );
   }
 
   if (networkStatus.state === "degraded" && peers.length === 0) {
     return (
-      <div className="px-1 py-2">
-        <p className="esk-label mb-2">People nearby</p>
-        <p className="text-[0.78rem] font-medium tracking-wide text-[color:var(--color-esk-text)]">
-          Looking for the network...
-        </p>
-        <p className="esk-meta mt-1.5 leading-relaxed">
-          Discovery is limited. Your profile still works.
-        </p>
-      </div>
+      <NearbyEmpty
+        searching
+        title="Looking for the network"
+        detail="Discovery is limited. Your profile still works."
+      />
     );
   }
 
   if (peers.length === 0) {
     return (
-      <div className="px-1 py-2">
-        <p className="esk-label mb-2">People nearby</p>
-        <p className="text-[0.78rem] font-medium tracking-wide text-[color:var(--color-esk-text)]">
-          No one else is nearby.
-        </p>
-        <p className="esk-meta mt-1.5 leading-relaxed">
-          <span className="esk-searching">
-            eskusmi is looking for people on this network.
-          </span>
-        </p>
-      </div>
+      <NearbyEmpty
+        searching
+        title="Nobody else yet"
+        detail="Listening on this network."
+      />
     );
   }
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <p className="esk-label mb-2 px-1">People nearby</p>
-      <div className="min-h-0 flex-1 space-y-0.5 overflow-y-auto pr-0.5 esk-scroll">
+      <p className="esk-label mb-2 px-0.5">Nearby</p>
+      <div className="min-h-0 flex-1 space-y-1 overflow-y-auto pr-0.5 esk-scroll">
         {peers.map((peer) => (
           <PeerRow
             key={peer.id}

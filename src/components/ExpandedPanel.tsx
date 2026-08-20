@@ -2,17 +2,15 @@ import { useEffect, useState, type FormEvent } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { cn } from "../lib/cn";
 import { EASE, MOTION } from "../lib/motion";
-import { statusHint, statusLabel } from "../lib/status";
+import { statusHint } from "../lib/status";
 import type { PresenceStatus, UserProfile } from "../types/user";
 import type { Peer } from "../types/peer";
 import type { NetworkStatus } from "../types/network";
 import type { PeerPingState } from "../hooks/usePing";
 import {
   CloseIcon,
-  FocusGlyph,
   IconButton,
   PanelHeader,
-  StatusDot,
 } from "./common/PanelChrome";
 import { PeerList } from "./PeerList";
 import { StatusSelector } from "./StatusSelector";
@@ -31,6 +29,11 @@ type ExpandedPanelProps = {
   onPingPeer: (peerId: string) => void;
   onToggleAutostart: (enabled: boolean) => Promise<void>;
 };
+
+function initialFor(name: string): string {
+  const trimmed = name.trim();
+  return trimmed ? trimmed[0].toLowerCase() : "e";
+}
 
 export function ExpandedPanel({
   visible,
@@ -54,9 +57,8 @@ export function ExpandedPanel({
     setEditing(false);
   }, [profile.name]);
 
-  async function handleSaveName(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const trimmed = draftName.trim().slice(0, 64);
+  async function commitName(value: string) {
+    const trimmed = value.trim().slice(0, 64);
     if (!trimmed) {
       setDraftName(profile.name);
       setEditing(false);
@@ -66,6 +68,11 @@ export function ExpandedPanel({
     setEditing(false);
   }
 
+  async function handleSaveName(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    await commitName(draftName);
+  }
+
   return (
     <motion.section
       aria-hidden={!visible}
@@ -73,7 +80,7 @@ export function ExpandedPanel({
       animate={
         visible
           ? { opacity: 1, y: 0, scale: 1 }
-          : { opacity: 0, y: 8, scale: 0.96 }
+          : { opacity: 0, y: 10, scale: 0.97 }
       }
       transition={{
         duration: visible ? MOTION.smooth : MOTION.fast,
@@ -84,25 +91,16 @@ export function ExpandedPanel({
         visible ? "pointer-events-auto" : "pointer-events-none",
       )}
     >
-      <motion.div
-        initial={false}
-        animate={visible ? { opacity: 1, y: 0 } : { opacity: 0, y: 4 }}
-        transition={{
-          duration: MOTION.fast,
-          delay: visible ? 0.02 : 0,
-          ease: EASE.out,
-        }}
-      >
-        <PanelHeader
-          trailing={
-            <IconButton label="Close eskusmi panel" onClick={onCollapse}>
-              <CloseIcon />
-            </IconButton>
-          }
-        />
-      </motion.div>
+      <PanelHeader
+        brand={false}
+        trailing={
+          <IconButton label="Close eskusmi panel" onClick={onCollapse}>
+            <CloseIcon />
+          </IconButton>
+        }
+      />
 
-      <div className="flex min-h-0 flex-1 flex-col px-4 pb-4 pt-3.5">
+      <div className="flex min-h-0 flex-1 flex-col px-3.5 pb-3.5">
         <motion.div
           initial={false}
           animate={visible ? { opacity: 1, y: 0 } : { opacity: 0, y: 6 }}
@@ -111,89 +109,86 @@ export function ExpandedPanel({
             delay: visible ? 0.04 : 0,
             ease: EASE.out,
           }}
+          className="esk-card px-3 py-3"
         >
-          <p className="esk-label">Your presence</p>
-
-          <div className="mt-2.5 flex items-start justify-between gap-3">
-            <AnimatePresence mode="wait" initial={false}>
-              {editing ? (
-                <motion.form
-                  key="edit"
-                  initial={{ opacity: 0, y: 4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -2 }}
-                  transition={{ duration: MOTION.fast, ease: EASE.out }}
-                  onSubmit={(event) => void handleSaveName(event)}
-                  className="min-w-0 flex-1"
-                >
-                  <input
-                    autoFocus
-                    value={draftName}
-                    maxLength={64}
-                    spellCheck={false}
-                    aria-label="Display name"
-                    onChange={(event) => setDraftName(event.target.value)}
-                    onBlur={() => {
-                      void (async () => {
-                        const trimmed = draftName.trim().slice(0, 64);
-                        if (!trimmed) {
-                          setDraftName(profile.name);
-                          setEditing(false);
-                          return;
-                        }
-                        await onUpdateName(trimmed);
-                        setEditing(false);
-                      })();
-                    }}
-                    className={cn(
-                      "esk-focus-ring h-8 w-full rounded-[var(--esk-radius-sm)]",
-                      "border border-[color:var(--color-esk-border-strong)] bg-black/25 px-2",
-                      "text-[0.9rem] font-medium tracking-wide text-[color:var(--color-esk-text)]",
-                    )}
-                  />
-                </motion.form>
-              ) : (
-                <motion.div
-                  key="view"
-                  initial={{ opacity: 0, y: 4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -2 }}
-                  transition={{ duration: MOTION.fast, ease: EASE.out }}
-                  className="min-w-0 flex-1"
-                >
-                  <p className="esk-name truncate">{profile.name}</p>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {!editing ? (
-              <button
-                type="button"
-                onClick={() => setEditing(true)}
-                className="esk-focus-ring shrink-0 text-[0.66rem] tracking-wide text-[color:var(--color-esk-text-muted)] transition-colors hover:text-[color:var(--color-esk-text)]"
-              >
-                Edit
-              </button>
-            ) : null}
-          </div>
-
-          <div className="mt-1.5 flex items-center gap-2">
-            <StatusDot status={profile.status} />
-            <span className="text-[0.74rem] tracking-wide text-[color:var(--color-esk-text)]">
-              {statusLabel(profile.status)}
+          <div className="flex items-center gap-2.5">
+            <span
+              aria-hidden="true"
+              className="eskusmi-orb flex h-9 w-9 shrink-0 items-center justify-center"
+            >
+              <span className="eskusmi-orb__mark text-[0.92rem] font-light leading-none">
+                {initialFor(profile.name)}
+              </span>
             </span>
-            {profile.status === "focus" ? (
-              <FocusGlyph className="text-[color:var(--color-esk-text-muted)]" />
-            ) : null}
+
+            <div className="min-w-0 flex-1">
+              <AnimatePresence mode="wait" initial={false}>
+                {editing ? (
+                  <motion.form
+                    key="edit"
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -2 }}
+                    transition={{ duration: MOTION.fast, ease: EASE.out }}
+                    onSubmit={(event) => void handleSaveName(event)}
+                  >
+                    <input
+                      autoFocus
+                      value={draftName}
+                      maxLength={64}
+                      spellCheck={false}
+                      aria-label="Display name"
+                      onChange={(event) => setDraftName(event.target.value)}
+                      onBlur={() => {
+                        void commitName(draftName);
+                      }}
+                      className={cn(
+                        "esk-focus-ring h-8 w-full rounded-[var(--esk-radius-sm)]",
+                        "border border-[color:var(--color-esk-border-strong)] bg-black/25 px-2",
+                        "text-[0.88rem] font-medium tracking-wide text-[color:var(--color-esk-text)]",
+                      )}
+                    />
+                  </motion.form>
+                ) : (
+                  <motion.div
+                    key="view"
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -2 }}
+                    transition={{ duration: MOTION.fast, ease: EASE.out }}
+                    className="flex items-center gap-2"
+                  >
+                    <p className="esk-name min-w-0 flex-1 truncate">
+                      {profile.name}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setEditing(true)}
+                      className="esk-focus-ring shrink-0 text-[0.62rem] tracking-wide text-[color:var(--color-esk-text-muted)] transition-colors hover:text-[color:var(--color-esk-text)]"
+                    >
+                      Edit
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              <p className="esk-meta mt-0.5 leading-snug">
+                {statusHint(profile.status)}
+              </p>
+            </div>
           </div>
 
-          <p className="esk-meta mt-1.5 leading-relaxed">
-            {statusHint(profile.status)}
-          </p>
+          <div className="mt-3">
+            <StatusSelector
+              status={profile.status}
+              onChange={(next) => {
+                void onUpdateStatus(next);
+              }}
+            />
+          </div>
         </motion.div>
 
         <motion.div
-          className="mt-4 min-h-0 flex-1"
+          className="mt-3.5 min-h-0 flex-1"
           initial={false}
           animate={visible ? { opacity: 1, y: 0 } : { opacity: 0, y: 8 }}
           transition={{
@@ -211,32 +206,10 @@ export function ExpandedPanel({
         </motion.div>
 
         {pingFeedback ? (
-          <p
-            className="esk-meta mt-2"
-            role="status"
-            aria-live="polite"
-          >
+          <p className="esk-meta mt-2 px-0.5" role="status" aria-live="polite">
             {pingFeedback}
           </p>
         ) : null}
-
-        <motion.div
-          className="mt-3"
-          initial={false}
-          animate={visible ? { opacity: 1, y: 0 } : { opacity: 0, y: 6 }}
-          transition={{
-            duration: MOTION.fast,
-            delay: visible ? 0.09 : 0,
-            ease: EASE.out,
-          }}
-        >
-          <StatusSelector
-            status={profile.status}
-            onChange={(next) => {
-              void onUpdateStatus(next);
-            }}
-          />
-        </motion.div>
 
         <motion.label
           className="mt-3 flex cursor-pointer items-center justify-between gap-3 px-0.5"

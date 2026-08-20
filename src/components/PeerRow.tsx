@@ -25,13 +25,21 @@ export function PeerRow({ peer, pingState, onPing }: PeerRowProps) {
       whileTap={reduceMotion ? undefined : { scale: 0.985 }}
       transition={{ duration: MOTION.micro, ease: EASE.out }}
       className={cn(
-        "esk-focus-ring group flex w-full items-center gap-2.5 rounded-[var(--esk-radius-md)] px-2.5 py-2 text-left",
+        "esk-focus-ring group flex w-full items-center gap-3 rounded-[var(--esk-radius-md)] px-2.5 py-2.5 text-left",
         "transition-colors duration-[var(--esk-dur-fast)]",
         "hover:bg-[color:var(--color-esk-surface-hover)]",
         "active:bg-[color:var(--color-esk-surface-active)]",
       )}
     >
-      <StatusDot status={peer.status} />
+      <span
+        aria-hidden="true"
+        className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[color:var(--color-esk-border)] bg-white/[0.04] text-[0.78rem] font-light leading-none text-[color:var(--color-esk-text)]"
+      >
+        {peer.name.trim().slice(0, 1).toLowerCase() || "·"}
+        <span className="absolute -right-px -bottom-px rounded-full bg-[color:var(--color-esk-surface)] p-[2px]">
+          <StatusDot status={peer.status} />
+        </span>
+      </span>
       <span className="min-w-0 flex-1">
         <span className="block truncate text-[0.8rem] font-medium tracking-wide text-[color:var(--color-esk-text)]">
           {peer.name}
