@@ -1,0 +1,360 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: Inter, "SF Pro Display", "Segoe UI", system-ui, sans-serif;
+
+  --color-esk-bg: transparent;
+  --color-esk-surface: #111113;
+  --color-esk-surface-elevated: #17171a;
+  --color-esk-surface-hover: rgb(255 255 255 / 0.04);
+  --color-esk-surface-active: rgb(255 255 255 / 0.065);
+  --color-esk-border: rgb(255 255 255 / 0.1);
+  --color-esk-border-strong: rgb(255 255 255 / 0.18);
+  --color-esk-divider: rgb(255 255 255 / 0.07);
+  --color-esk-text: #f2f2f4;
+  --color-esk-text-secondary: #a8a8b0;
+  --color-esk-text-muted: #75757e;
+  --color-esk-focus-ring: rgb(255 255 255 / 0.16);
+  --color-esk-attention: rgb(255 255 255 / 0.12);
+
+  --color-surface: var(--color-esk-surface);
+  --color-edge: var(--color-esk-border);
+  --color-edge-bright: var(--color-esk-border-strong);
+  --color-mark: var(--color-esk-text);
+  --color-muted: var(--color-esk-text-muted);
+  --color-divider: var(--color-esk-divider);
+}
+
+:root {
+  --esk-space-1: 4px;
+  --esk-space-2: 8px;
+  --esk-space-3: 12px;
+  --esk-space-4: 16px;
+  --esk-space-5: 20px;
+  --esk-space-6: 24px;
+  --esk-space-8: 32px;
+  --esk-radius-sm: 8px;
+  --esk-radius-md: 12px;
+  --esk-radius-lg: 18px;
+  --esk-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --esk-ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --esk-dur-micro: 90ms;
+  --esk-dur-fast: 150ms;
+  --esk-dur-standard: 220ms;
+  --esk-dur-smooth: 280ms;
+  --esk-dur-emphasis: 380ms;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: transparent !important;
+  font-family: var(--font-sans);
+  color: var(--color-esk-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  user-select: none;
+  cursor: default;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+input {
+  font: inherit;
+}
+
+/* Soft scrollbar for peer lists */
+.esk-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(255 255 255 / 0.14) transparent;
+}
+
+.esk-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.esk-scroll::-webkit-scrollbar-thumb {
+  background: rgb(255 255 255 / 0.14);
+  border-radius: 999px;
+}
+
+.esk-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.esk-panel {
+  border: 1px solid var(--color-esk-border);
+  border-radius: var(--esk-radius-lg);
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 0.03), transparent 28%),
+    var(--color-esk-surface);
+  /* Soft depth via layered inset luminance only — rectangular box/filter
+     shadows paint a visible square on transparent Win32 HWNDs. */
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.06),
+    0 0 0 1px rgb(0 0 0 / 0.35);
+}
+
+.esk-label {
+  font-size: 0.62rem;
+  font-weight: 500;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--color-esk-text-muted);
+}
+
+.esk-title {
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: var(--color-esk-text);
+}
+
+.esk-name {
+  font-size: 0.94rem;
+  font-weight: 560;
+  letter-spacing: 0.01em;
+  color: var(--color-esk-text);
+}
+
+.esk-body {
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  color: var(--color-esk-text-secondary);
+}
+
+.esk-meta {
+  font-size: 0.64rem;
+  letter-spacing: 0.02em;
+  color: var(--color-esk-text-muted);
+}
+
+.esk-focus-ring:focus-visible {
+  outline: 1px solid var(--color-esk-border-strong);
+  outline-offset: 2px;
+}
+
+.esk-status-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  flex-shrink: 0;
+  background: var(--color-esk-text-secondary);
+}
+
+.esk-status-dot--available {
+  background: var(--color-esk-text);
+  box-shadow: 0 0 0 3px rgb(255 255 255 / 0.06);
+}
+
+.esk-status-dot--focus {
+  background: var(--color-esk-text);
+  opacity: 0.92;
+}
+
+.esk-status-dot--away {
+  background: var(--color-esk-text-muted);
+  opacity: 0.7;
+}
+
+.esk-status-dot--busy {
+  background: var(--color-esk-border-strong);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.2);
+}
+
+/* —— Orb: physical brand object —— */
+.eskusmi-orb {
+  position: relative;
+  isolation: isolate;
+  border: 1px solid rgb(255 255 255 / 0.14);
+  background:
+    radial-gradient(circle at 32% 26%, rgb(255 255 255 / 0.14), transparent 42%),
+    radial-gradient(circle at 70% 78%, rgb(0 0 0 / 0.35), transparent 55%),
+    linear-gradient(160deg, #1a1a1e 0%, #0e0e10 100%);
+  /* No outer box/filter shadow — those create a square halo on transparent HWND */
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.12),
+    inset 0 -10px 18px rgb(0 0 0 / 0.35);
+  will-change: transform;
+}
+
+.eskusmi-orb::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  border-radius: inherit;
+  background: linear-gradient(
+    180deg,
+    rgb(255 255 255 / 0.08),
+    transparent 42%,
+    rgb(0 0 0 / 0.12)
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+.eskusmi-orb__mark {
+  position: relative;
+  z-index: 2;
+}
+
+.eskusmi-orb__pulse {
+  border: 1px solid transparent;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.eskusmi-orb--available .eskusmi-orb__pulse {
+  border-color: rgb(255 255 255 / 0.1);
+  opacity: 0.4;
+  animation: esk-breathe 4.8s var(--esk-ease) infinite;
+}
+
+.eskusmi-orb--focus {
+  border-color: rgb(255 255 255 / 0.22);
+}
+
+.eskusmi-orb--focus .eskusmi-orb__pulse {
+  border-color: rgb(255 255 255 / 0.18);
+  opacity: 0.75;
+  animation: esk-breathe 3.4s var(--esk-ease) infinite;
+}
+
+.eskusmi-orb--away {
+  border-color: rgb(255 255 255 / 0.08);
+  opacity: 0.82;
+}
+
+.eskusmi-orb--busy {
+  border-color: rgb(255 255 255 / 0.2);
+}
+
+.eskusmi-orb--attention .eskusmi-orb__pulse {
+  border-color: rgb(255 255 255 / 0.28);
+  opacity: 1;
+  animation: esk-attention-ring 1.7s var(--esk-ease) infinite;
+}
+
+.esk-attention-surface {
+  animation: esk-attention-glow 2.4s var(--esk-ease) 2;
+}
+
+@keyframes esk-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.22;
+  }
+  50% {
+    transform: scale(1.045);
+    opacity: 0.62;
+  }
+}
+
+@keyframes esk-attention-ring {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scale(1.07);
+    opacity: 0.95;
+  }
+}
+
+@keyframes esk-attention-glow {
+  0%,
+  100% {
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.06),
+      0 0 0 1px rgb(0 0 0 / 0.35);
+  }
+  50% {
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.1),
+      0 0 0 1px rgb(255 255 255 / 0.14);
+  }
+}
+
+@keyframes esk-search {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+.esk-searching {
+  animation: esk-search 1.8s var(--esk-ease) infinite;
+}
+
+/* Custom toggle */
+.esk-switch {
+  position: relative;
+  width: 32px;
+  height: 18px;
+  border-radius: 999px;
+  border: 1px solid var(--color-esk-border);
+  background: rgb(255 255 255 / 0.06);
+  transition:
+    background var(--esk-dur-fast) var(--esk-ease),
+    border-color var(--esk-dur-fast) var(--esk-ease);
+}
+
+.esk-switch[data-on="true"] {
+  background: rgb(255 255 255 / 0.18);
+  border-color: var(--color-esk-border-strong);
+}
+
+.esk-switch__thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: var(--color-esk-text);
+  transition: transform var(--esk-dur-fast) var(--esk-ease);
+}
+
+.esk-switch[data-on="true"] .esk-switch__thumb {
+  transform: translateX(14px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .eskusmi-orb__pulse,
+  .esk-attention-surface,
+  .esk-searching {
+    animation: none !important;
+  }
+
+  .eskusmi-orb,
+  .esk-panel,
+  .esk-switch,
+  .esk-switch__thumb {
+    transition: none !important;
+  }
+}
