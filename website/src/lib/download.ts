@@ -1,6 +1,7 @@
 /** GitHub Releases artifacts from the multi-OS release workflow. */
-const RELEASE_BASE =
-  "https://github.com/shibushaba/eskusmi/releases/latest/download";
+export const ESKUSMI_RELEASE_TAG = "v0.1.2";
+
+const RELEASE_BASE = `https://github.com/shibushaba/eskusmi/releases/download/${ESKUSMI_RELEASE_TAG}`;
 
 export type DownloadPlatform =
   | "windows"
@@ -143,15 +144,15 @@ export function downloadLabel(platform: DownloadPlatform): string {
 export function platformCaption(platform: DownloadPlatform): string {
   switch (platform) {
     case "macos":
-      return "Detected macOS — downloading the Mac build";
+      return `${ESKUSMI_RELEASE_TAG} · macOS build`;
     case "linux":
-      return "Detected Linux — downloading the Linux build";
+      return `${ESKUSMI_RELEASE_TAG} · Linux build`;
     case "windows":
-      return "Detected Windows — downloading the Windows installer";
+      return `${ESKUSMI_RELEASE_TAG} · Windows installer`;
     case "ios":
     case "android":
       return "eskusmi is a desktop app — open this page on your computer";
     default:
-      return "Free · Windows · macOS · Linux · Local network";
+      return `${ESKUSMI_RELEASE_TAG} · Windows · macOS · Linux`;
   }
 }
