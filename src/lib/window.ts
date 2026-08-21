@@ -102,5 +102,8 @@ export async function startWindowDrag(): Promise<void> {
     return;
   }
 
-  await getCurrentWindow().startDragging();
+  const win = getCurrentWindow();
+  // Keep the orb HWND locked — Aero Snap mid-drag was blowing the tile up.
+  await win.setResizable(false).catch(() => undefined);
+  await win.startDragging();
 }

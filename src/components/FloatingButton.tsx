@@ -2,11 +2,12 @@ import { useRef, type PointerEvent as ReactPointerEvent } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import appIcon from "../assets/app-icon.png";
 import { cn } from "../lib/cn";
-import { SPRING } from "../lib/motion";
-import { startWindowDrag } from "../lib/window";
+import { FAB_SLOT, startWindowDrag, syncWindowToMode } from "../lib/window";
 import type { PresenceStatus } from "../types/user";
 
-const DRAG_THRESHOLD_PX = 5;
+const DRAG_THRESHOLD_PX = 4;
+/** Ignore the click that often fires right after a native window drag. */
+const CLICK_SUPPRESS_MS = 450;
 
 type FloatingButtonProps = {
   status: PresenceStatus;
@@ -28,6 +29,7 @@ export function FloatingButton({
     startX: 0,
     startY: 0,
   });
+  const suppressClickUntil = useRef(0);
 
   function handlePointerDown(event: ReactPointerEvent<HTMLButtonElement>) {
     if (event.button !== 0) {
@@ -51,22 +53,32 @@ export function FloatingButton({
 
       if (dx > DRAG_THRESHOLD_PX || dy > DRAG_THRESHOLD_PX) {
         dragState.current.dragged = true;
+        suppressClickUntil.current = Date.now() + CLICK_SUPPRESS_MS;
         void startWindowDrag();
       }
     };
 
     const onUp = () => {
+      const wasDrag = dragState.current.dragged;
       dragState.current.tracking = false;
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+
+      if (wasDrag) {
+        suppressClickUntil.current = Date.now() + CLICK_SUPPRESS_MS;
+        // Windows can snap/resize transparent HWNDs mid-drag — pin back to orb size.
+        void syncWindowToMode("collapsed");
+      }
     };
 
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
   }
 
   function handleClick() {
-    if (dragState.current.dragged) {
+    if (dragState.current.dragged || Date.now() < suppressClickUntil.current) {
       return;
     }
     onActivate();
@@ -81,20 +93,23 @@ export function FloatingButton({
       onPointerDown={handlePointerDown}
       onClick={handleClick}
       initial={false}
-      animate={{ opacity: 1, scale: 1 }}
-      whileTap={reduceMotion ? undefined : { scale: 0.97 }}
-      transition={reduceMotion ? { duration: 0 } : SPRING.snappy}
+      animate={{ opacity: 1 }}
+      transition={reduceMotion ? { duration: 0 } : { duration: 0.15 }}
+      style={{ width: FAB_SLOT.width, height: FAB_SLOT.height }}
       className={cn(
         "eskusmi-orb eskusmi-orb--brand",
         `eskusmi-orb--${status}`,
         attentionHint && "eskusmi-orb--attention",
-        "h-full w-full p-0 outline-none",
+        "shrink-0 p-0 outline-none",
       )}
     >
       <img
         src={appIcon}
         alt=""
+        width={FAB_SLOT.width}
+        height={FAB_SLOT.height}
         draggable={false}
+        decoding="async"
         className="eskusmi-orb__icon"
       />
     </motion.button>

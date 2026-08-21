@@ -68,8 +68,10 @@ export function useWidgetState() {
     busyRef.current = true;
 
     try {
-      await resizeTo("expanded");
+      // Show panel chrome before resize so the FAB never fills a large HWND.
       setExpanded(true);
+      setPanelVisible(false);
+      await resizeTo("expanded");
       await focusWidget();
       ignoreBlurUntilRef.current = Date.now() + PANEL_ENTER_MS + 120;
       await wait(28);

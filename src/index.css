@@ -329,11 +329,23 @@ html[data-platform="windows"] .esk-panel {
   will-change: auto;
   border-radius: 16px;
   overflow: hidden;
+  /* Stable compositor layer — avoids faint DWM flicker on the bitmap. */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  contain: strict;
 }
 
 html[data-platform="windows"] .eskusmi-orb--brand {
   /* DWM rounds the HWND; keep the tile square so no transparent CSS corners leak. */
   border-radius: 0;
+}
+
+/* Brand tile stays fully opaque — status dimming looked like a blink. */
+.eskusmi-orb--brand.eskusmi-orb--away,
+.eskusmi-orb--brand.eskusmi-orb--busy,
+.eskusmi-orb--brand.eskusmi-orb--focus,
+.eskusmi-orb--brand.eskusmi-orb--available {
+  opacity: 1;
 }
 
 .eskusmi-orb--brand::before {
@@ -348,6 +360,8 @@ html[data-platform="windows"] .eskusmi-orb--brand {
   object-fit: cover;
   pointer-events: none;
   user-select: none;
+  -webkit-user-drag: none;
+  transform: translateZ(0);
 }
 
 .eskusmi-orb__mark {

@@ -141,7 +141,7 @@ function App() {
           }}
         />
       ) : (
-        <div className="h-full w-full bg-transparent">
+        <div className="flex h-full w-full items-center justify-center bg-transparent">
           <FloatingButton
             status={profile.status}
             onActivate={() => void expand()}
