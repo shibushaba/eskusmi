@@ -1,6 +1,6 @@
 [package]
 name = "eskusmi"
-version = "0.1.3"
+version = "0.1.4"
 description = "Interrupt, without interrupting."
 authors = ["eskusmi"]
 edition = "2021"
