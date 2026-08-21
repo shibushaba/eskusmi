@@ -10,7 +10,7 @@ import { usePeers } from "./hooks/usePeers";
 import { usePing } from "./hooks/usePing";
 import { useUserProfile } from "./hooks/useUserProfile";
 import { useWidgetState } from "./hooks/useWidgetState";
-import { FAB_SLOT, placeNearBottomRight, syncWindowToMode } from "./lib/window";
+import { placeNearBottomRight, syncWindowToMode } from "./lib/window";
 
 function App() {
   const { profile, isLoading, saveProfile, updateName, updateStatus } =
@@ -93,7 +93,7 @@ function App() {
   if (!profile) {
     return (
       <main className="relative h-full w-full overflow-hidden bg-transparent">
-        <div className="h-full w-full p-1">
+        <div className="h-full w-full">
           <ProfileSetup visible onContinue={handleSetupContinue} />
         </div>
       </main>
@@ -103,7 +103,7 @@ function App() {
   if (attentionActive && activeIncoming) {
     return (
       <main className="relative h-full w-full overflow-hidden bg-transparent">
-        <div className="h-full w-full p-1">
+        <div className="h-full w-full">
           <IncomingPingOverlay
             ping={activeIncoming}
             queued={incoming}
@@ -119,43 +119,24 @@ function App() {
   return (
     <main className="relative h-full w-full overflow-hidden bg-transparent">
       {expanded ? (
-        <div className="flex h-full w-full flex-col bg-transparent">
-          <div className="min-h-0 flex-1 p-1 pb-0">
-            <ExpandedPanel
-              visible={panelVisible}
-              profile={profile}
-              peers={peers}
-              networkStatus={networkStatus}
-              pingFeedback={pingFeedback}
-              peerPingState={peerPingState}
-              autostartEnabled={autostartEnabled}
-              onCollapse={() => void collapse()}
-              onUpdateName={updateName}
-              onUpdateStatus={updateStatus}
-              onPingPeer={(peerId) => {
-                void sendPing(peerId);
-              }}
-              onToggleAutostart={setAutostart}
-            />
-          </div>
-          <div
-            className="flex shrink-0 justify-end"
-            style={{ height: FAB_SLOT.height }}
-          >
-            <div
-              className="flex items-center justify-center"
-              style={{ width: FAB_SLOT.width, height: FAB_SLOT.height }}
-            >
-              <FloatingButton
-                status={profile.status}
-                label="Collapse eskusmi"
-                onActivate={() => void collapse()}
-              />
-            </div>
-          </div>
-        </div>
+        <ExpandedPanel
+          visible={panelVisible}
+          profile={profile}
+          peers={peers}
+          networkStatus={networkStatus}
+          pingFeedback={pingFeedback}
+          peerPingState={peerPingState}
+          autostartEnabled={autostartEnabled}
+          onCollapse={() => void collapse()}
+          onUpdateName={updateName}
+          onUpdateStatus={updateStatus}
+          onPingPeer={(peerId) => {
+            void sendPing(peerId);
+          }}
+          onToggleAutostart={setAutostart}
+        />
       ) : (
-        <div className="flex h-full w-full items-center justify-center bg-transparent">
+        <div className="h-full w-full bg-transparent">
           <FloatingButton
             status={profile.status}
             onActivate={() => void expand()}

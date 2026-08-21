@@ -4,6 +4,7 @@ use tauri::{Manager, PhysicalPosition, WindowEvent};
 
 mod discovery;
 mod network;
+mod outside_click;
 mod peers;
 mod protocol;
 mod tray;
@@ -36,6 +37,7 @@ fn place_bottom_right(window: &tauri::WebviewWindow) {
 /// windows unless shadow is forced off and the webview background is fully clear.
 fn harden_window_transparency(window: &tauri::WebviewWindow) {
     let _ = window.set_shadow(false);
+    let _ = window.set_decorations(false);
 
     // Important: on Windows, HWND backgroundColor ignores alpha and becomes opaque.
     // Prefer leaving the window brush alone and force WebView2's DefaultBackgroundColor
@@ -62,6 +64,8 @@ fn harden_window_transparency(window: &tauri::WebviewWindow) {
 
         if let Ok(hwnd) = window.hwnd() {
             unsafe {
+                strip_os_chrome(hwnd);
+
                 // Fully extend the DWM frame so client area can be truly transparent.
                 let margins = windows::Win32::UI::Controls::MARGINS {
                     cxLeftWidth: -1,
@@ -92,8 +96,14 @@ fn harden_window_transparency(window: &tauri::WebviewWindow) {
                     std::mem::size_of::<u32>() as u32,
                 );
 
-                // Hard clip: ellipse for orb, rounded rect for panels.
-                // Guarantees no visible rectangular HWND fringe even if compositing is imperfect.
+                let disable_transitions: i32 = 1;
+                let _ = windows::Win32::Graphics::Dwm::DwmSetWindowAttribute(
+                    hwnd,
+                    windows::Win32::Graphics::Dwm::DWMWA_TRANSITIONS_FORCEDISABLED,
+                    std::ptr::addr_of!(disable_transitions).cast(),
+                    std::mem::size_of::<i32>() as u32,
+                );
+
                 apply_window_shape(hwnd, window);
             }
         }
@@ -103,6 +113,54 @@ fn harden_window_transparency(window: &tauri::WebviewWindow) {
     {
         let _ = window.set_background_color(Some(Color(0, 0, 0, 0)));
     }
+}
+
+#[cfg(windows)]
+unsafe fn strip_os_chrome(hwnd: windows::Win32::Foundation::HWND) {
+    use windows::Win32::UI::WindowsAndMessaging::{
+        GetWindowLongPtrW, SetWindowLongPtrW, SetWindowPos, GWL_EXSTYLE, GWL_STYLE,
+        SWP_FRAMECHANGED, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE, SWP_NOZORDER,
+        WS_BORDER, WS_CAPTION, WS_CLIPCHILDREN, WS_CLIPSIBLINGS, WS_DLGFRAME, WS_MAXIMIZEBOX,
+        WS_MINIMIZEBOX, WS_POPUP, WS_SYSMENU, WS_THICKFRAME, WS_EX_APPWINDOW, WS_EX_CLIENTEDGE,
+        WS_EX_DLGMODALFRAME, WS_EX_LAYERED, WS_EX_STATICEDGE, WS_EX_TOOLWINDOW, WS_EX_WINDOWEDGE,
+        WINDOW_EX_STYLE, WINDOW_STYLE,
+    };
+
+    let style = WINDOW_STYLE(GetWindowLongPtrW(hwnd, GWL_STYLE) as u32);
+    let style = (style
+        & !(WS_CAPTION
+            | WS_THICKFRAME
+            | WS_MINIMIZEBOX
+            | WS_MAXIMIZEBOX
+            | WS_SYSMENU
+            | WS_BORDER
+            | WS_DLGFRAME))
+        | WS_POPUP
+        | WS_CLIPCHILDREN
+        | WS_CLIPSIBLINGS;
+    SetWindowLongPtrW(hwnd, GWL_STYLE, style.0 as isize);
+
+    let ex = WINDOW_EX_STYLE(GetWindowLongPtrW(hwnd, GWL_EXSTYLE) as u32);
+    let ex = (ex
+        & !(WS_EX_APPWINDOW
+            | WS_EX_WINDOWEDGE
+            | WS_EX_DLGMODALFRAME
+            | WS_EX_CLIENTEDGE
+            | WS_EX_STATICEDGE))
+        | WS_EX_TOOLWINDOW
+        | WS_EX_LAYERED
+        | WINDOW_EX_STYLE(0x0020_0000); // WS_EX_NOREDIRECTIONBITMAP
+    SetWindowLongPtrW(hwnd, GWL_EXSTYLE, ex.0 as isize);
+
+    let _ = SetWindowPos(
+        hwnd,
+        None,
+        0,
+        0,
+        0,
+        0,
+        SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED,
+    );
 }
 
 #[cfg(windows)]
@@ -162,6 +220,8 @@ pub fn run() {
                 eprintln!("[eskusmi] Tray setup failed: {err}");
             }
 
+            outside_click::install(&handle);
+
             let window = app
                 .get_webview_window("main")
                 .expect("missing main window");
@@ -170,19 +230,21 @@ pub fn run() {
             let _ = window.set_size(tauri::Size::Logical(tauri::LogicalSize::new(60.0, 60.0)));
             place_bottom_right(&window);
 
+            // WebView2 is often not ready in setup — retry until DefaultBackgroundColor
+            // actually sticks, otherwise the orb sits on a white/gray square.
             let delayed = window.clone();
             std::thread::spawn(move || {
-                std::thread::sleep(std::time::Duration::from_millis(250));
-                harden_window_transparency(&delayed);
-                if let (Ok(size), Ok(scale)) = (delayed.outer_size(), delayed.scale_factor()) {
-                    let max_inflate = (180.0 * scale) as u32;
-                    let min_inflate = (70.0 * scale) as u32;
-                    if size.width > min_inflate && size.width < max_inflate {
-                        let _ = delayed
-                            .set_size(tauri::Size::Logical(tauri::LogicalSize::new(60.0, 60.0)));
+                for ms in [50_u64, 150, 300, 800, 1600] {
+                    std::thread::sleep(std::time::Duration::from_millis(ms));
+                    if let (Ok(size), Ok(scale)) = (delayed.outer_size(), delayed.scale_factor()) {
+                        let orb_limit = (78.0 * scale) as u32;
+                        if size.width > orb_limit || size.height > orb_limit {
+                            continue;
+                        }
                     }
+                    harden_window_transparency(&delayed);
+                    place_bottom_right(&delayed);
                 }
-                place_bottom_right(&delayed);
             });
 
             Ok(())

@@ -59,7 +59,9 @@ body,
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: transparent !important;
+  /* Opaque fill so WebView2 cannot show a second gray/white frame in
+     the corners outside CSS radius. HWND region clips the window shape. */
+  background: #111113 !important;
   font-family: var(--font-sans);
   color: var(--color-esk-text);
   -webkit-font-smoothing: antialiased;
@@ -101,17 +103,13 @@ input {
 }
 
 .esk-panel {
-  border: 1px solid var(--color-esk-border);
-  border-radius: var(--esk-radius-lg);
+  border: 0;
+  border-radius: 0;
   background:
     linear-gradient(180deg, rgb(255 255 255 / 0.055), transparent 34%),
     radial-gradient(ellipse 80% 50% at 0% 0%, rgb(255 255 255 / 0.04), transparent 50%),
     var(--color-esk-surface);
-  /* Soft depth via layered inset luminance only — rectangular box/filter
-     shadows paint a visible square on transparent Win32 HWNDs. */
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.08),
-    0 0 0 1px rgb(0 0 0 / 0.35);
+  box-shadow: none;
 }
 
 .esk-card {
@@ -367,6 +365,50 @@ input {
   animation: esk-attention-glow 2.4s var(--esk-ease) 2;
 }
 
+.esk-ping-burst {
+  isolation: isolate;
+}
+
+.esk-ping-burst__core {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  height: 44px;
+  width: 44px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid rgb(255 255 255 / 0.18);
+  background:
+    radial-gradient(circle at 32% 28%, rgb(255 255 255 / 0.12), transparent 46%),
+    linear-gradient(160deg, #1c1c20 0%, #101012 100%);
+}
+
+.esk-ping-burst__ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  border: 1px solid rgb(255 255 255 / 0.22);
+  animation: esk-ping-ring 1.7s var(--esk-ease) infinite;
+}
+
+.esk-ping-burst__ring--delay {
+  animation-delay: 0.55s;
+}
+
+.esk-peer-ping-wave {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgb(255 255 255 / 0.1),
+    transparent
+  );
+}
+
+.esk-peer-pinging {
+  border: 1px solid rgb(255 255 255 / 0.08);
+}
+
 @keyframes esk-breathe {
   0%,
   100% {
@@ -394,14 +436,23 @@ input {
 @keyframes esk-attention-glow {
   0%,
   100% {
-    box-shadow:
-      inset 0 1px 0 rgb(255 255 255 / 0.06),
-      0 0 0 1px rgb(0 0 0 / 0.35);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06);
   }
   50% {
     box-shadow:
-      inset 0 1px 0 rgb(255 255 255 / 0.1),
-      0 0 0 1px rgb(255 255 255 / 0.14);
+      inset 0 1px 0 rgb(255 255 255 / 0.12),
+      inset 0 0 0 1px rgb(255 255 255 / 0.08);
+  }
+}
+
+@keyframes esk-ping-ring {
+  0% {
+    transform: scale(0.72);
+    opacity: 0.55;
+  }
+  100% {
+    transform: scale(1.35);
+    opacity: 0;
   }
 }
 
@@ -467,7 +518,8 @@ input {
   .eskusmi-orb__pulse,
   .esk-attention-surface,
   .esk-searching,
-  .esk-radar__ring {
+  .esk-radar__ring,
+  .esk-ping-burst__ring {
     animation: none !important;
   }
 

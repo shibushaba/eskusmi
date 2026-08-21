@@ -34,8 +34,8 @@ export function ProfileSetup({ visible, onContinue }: ProfileSetupProps) {
       initial={false}
       animate={
         visible
-          ? { opacity: 1, y: 0, scale: 1 }
-          : { opacity: 0, y: 6, scale: 0.97 }
+          ? { opacity: 1 }
+          : { opacity: 0 }
       }
       transition={{ duration: MOTION.standard, ease: EASE.out }}
       className={cn(

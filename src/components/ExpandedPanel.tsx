@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { cn } from "../lib/cn";
-import { EASE, MOTION } from "../lib/motion";
+import { EASE, MOTION, SPRING } from "../lib/motion";
 import { statusHint } from "../lib/status";
 import type { PresenceStatus, UserProfile } from "../types/user";
 import type { Peer } from "../types/peer";
@@ -49,6 +49,7 @@ export function ExpandedPanel({
   onPingPeer,
   onToggleAutostart,
 }: ExpandedPanelProps) {
+  const reduceMotion = useReducedMotion();
   const [editing, setEditing] = useState(false);
   const [draftName, setDraftName] = useState(profile.name);
 
@@ -73,53 +74,80 @@ export function ExpandedPanel({
     await commitName(draftName);
   }
 
+  const enter = reduceMotion
+    ? { duration: 0 }
+    : { duration: MOTION.smooth, ease: EASE.enter };
+  const exit = reduceMotion
+    ? { duration: 0 }
+    : { duration: MOTION.fast, ease: EASE.exit };
+  const stagger = (delay: number) =>
+    reduceMotion
+      ? { duration: 0 }
+      : {
+          duration: MOTION.standard,
+          delay: visible ? delay : 0,
+          ease: EASE.soft,
+        };
+
   return (
     <motion.section
       aria-hidden={!visible}
       initial={false}
       animate={
         visible
-          ? { opacity: 1, y: 0, scale: 1 }
-          : { opacity: 0, y: 10, scale: 0.97 }
+          ? { opacity: 1, y: 0 }
+          : { opacity: 0, y: reduceMotion ? 0 : 10 }
       }
-      transition={{
-        duration: visible ? MOTION.smooth : MOTION.fast,
-        ease: visible ? EASE.enter : EASE.exit,
-      }}
+      transition={visible ? enter : exit}
       className={cn(
         "esk-panel flex h-full w-full flex-col overflow-hidden",
         visible ? "pointer-events-auto" : "pointer-events-none",
       )}
     >
-      <PanelHeader
-        brand={false}
-        trailing={
-          <IconButton label="Close eskusmi panel" onClick={onCollapse}>
-            <CloseIcon />
-          </IconButton>
-        }
-      />
+      <motion.div
+        initial={false}
+        animate={visible ? { opacity: 1, y: 0 } : { opacity: 0, y: -4 }}
+        transition={stagger(0.02)}
+      >
+        <PanelHeader
+          brand={false}
+          trailing={
+            <IconButton label="Close eskusmi panel" onClick={onCollapse}>
+              <CloseIcon />
+            </IconButton>
+          }
+        />
+      </motion.div>
 
       <div className="flex min-h-0 flex-1 flex-col px-3.5 pb-3.5">
         <motion.div
           initial={false}
-          animate={visible ? { opacity: 1, y: 0 } : { opacity: 0, y: 6 }}
-          transition={{
-            duration: MOTION.standard,
-            delay: visible ? 0.04 : 0,
-            ease: EASE.out,
-          }}
+          animate={visible ? { opacity: 1, y: 0 } : { opacity: 0, y: 8 }}
+          transition={stagger(0.05)}
           className="esk-card px-3 py-3"
         >
           <div className="flex items-center gap-2.5">
-            <span
+            <motion.span
               aria-hidden="true"
+              initial={false}
+              animate={
+                visible
+                  ? { opacity: 1, scale: 1 }
+                  : { opacity: 0, scale: 0.92 }
+              }
+              transition={
+                reduceMotion
+                  ? { duration: 0 }
+                  : visible
+                    ? SPRING.soft
+                    : { duration: MOTION.fast, ease: EASE.exit }
+              }
               className="eskusmi-orb flex h-9 w-9 shrink-0 items-center justify-center"
             >
               <span className="eskusmi-orb__mark text-[0.92rem] font-light leading-none">
                 {initialFor(profile.name)}
               </span>
-            </span>
+            </motion.span>
 
             <div className="min-w-0 flex-1">
               <AnimatePresence mode="wait" initial={false}>
@@ -190,12 +218,8 @@ export function ExpandedPanel({
         <motion.div
           className="mt-3.5 min-h-0 flex-1"
           initial={false}
-          animate={visible ? { opacity: 1, y: 0 } : { opacity: 0, y: 8 }}
-          transition={{
-            duration: MOTION.standard,
-            delay: visible ? 0.07 : 0,
-            ease: EASE.out,
-          }}
+          animate={visible ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
+          transition={stagger(0.09)}
         >
           <PeerList
             peers={peers}
@@ -205,21 +229,28 @@ export function ExpandedPanel({
           />
         </motion.div>
 
-        {pingFeedback ? (
-          <p className="esk-meta mt-2 px-0.5" role="status" aria-live="polite">
-            {pingFeedback}
-          </p>
-        ) : null}
+        <AnimatePresence>
+          {pingFeedback ? (
+            <motion.p
+              key={pingFeedback}
+              initial={reduceMotion ? false : { opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: MOTION.fast, ease: EASE.out }}
+              className="esk-meta mt-2 px-0.5"
+              role="status"
+              aria-live="polite"
+            >
+              {pingFeedback}
+            </motion.p>
+          ) : null}
+        </AnimatePresence>
 
         <motion.label
           className="mt-3 flex cursor-pointer items-center justify-between gap-3 px-0.5"
           initial={false}
-          animate={visible ? { opacity: 1 } : { opacity: 0 }}
-          transition={{
-            duration: MOTION.fast,
-            delay: visible ? 0.1 : 0,
-            ease: EASE.out,
-          }}
+          animate={visible ? { opacity: 1, y: 0 } : { opacity: 0, y: 6 }}
+          transition={stagger(0.12)}
         >
           <span className="esk-meta">Start with Windows</span>
           <button
