@@ -2,7 +2,7 @@ import { useRef, type PointerEvent as ReactPointerEvent } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import appIcon from "../assets/app-icon.png";
 import { cn } from "../lib/cn";
-import { FAB_SLOT, startWindowDrag, syncWindowToMode } from "../lib/window";
+import { FAB_SLOT, startWindowDrag, syncWindowToMode, clampWindowToWorkArea } from "../lib/window";
 import type { PresenceStatus } from "../types/user";
 
 const DRAG_THRESHOLD_PX = 4;
@@ -68,7 +68,7 @@ export function FloatingButton({
       if (wasDrag) {
         suppressClickUntil.current = Date.now() + CLICK_SUPPRESS_MS;
         // Windows can snap/resize transparent HWNDs mid-drag — pin back to orb size.
-        void syncWindowToMode("collapsed");
+        void syncWindowToMode("collapsed").then(() => clampWindowToWorkArea());
       }
     };
 
