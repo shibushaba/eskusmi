@@ -10,7 +10,7 @@ import {
 /** Native window size for the collapsed orb — also the FAB slot when expanded. */
 export const FAB_SLOT = { width: 60, height: 60 } as const;
 export const COLLAPSED_SIZE = FAB_SLOT;
-export const EXPANDED_SIZE = { width: 300, height: 380 } as const;
+export const EXPANDED_SIZE = { width: 300, height: 420 } as const;
 export const SETUP_SIZE = { width: 320, height: 220 } as const;
 export const ATTENTION_SIZE = { width: 320, height: 320 } as const;
 

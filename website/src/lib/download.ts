@@ -1,5 +1,5 @@
 /** GitHub Releases artifacts from the multi-OS release workflow. */
-export const ESKUSMI_PREFERRED_TAG = "v0.1.4";
+export const ESKUSMI_PREFERRED_TAG = "v0.1.5";
 /** @deprecated use ESKUSMI_PREFERRED_TAG — kept for older imports */
 export const ESKUSMI_RELEASE_TAG = ESKUSMI_PREFERRED_TAG;
 

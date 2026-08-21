@@ -108,6 +108,17 @@ input {
   background: transparent;
 }
 
+/* Nearby list: always scroll inside the panel, never cover footer controls. */
+.esk-peer-list {
+  min-height: 0;
+}
+
+.esk-peer-list__scroll {
+  min-height: 0;
+  max-height: 100%;
+  -webkit-overflow-scrolling: touch;
+}
+
 .esk-panel {
   border: 1px solid var(--color-esk-border);
   border-radius: var(--esk-radius-lg);

@@ -107,6 +107,7 @@ export function ExpandedPanel({
       )}
     >
       <motion.div
+        className="shrink-0"
         initial={false}
         animate={visible ? { opacity: 1, y: 0 } : { opacity: 0, y: -4 }}
         transition={stagger(0.02)}
