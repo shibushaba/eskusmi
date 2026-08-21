@@ -11,6 +11,11 @@ mod tray;
 
 use network::NetworkState;
 
+#[tauri::command]
+fn quit_app(app: tauri::AppHandle) {
+    app.exit(0);
+}
+
 fn place_bottom_right(window: &tauri::WebviewWindow) {
     let monitor = window
         .current_monitor()
@@ -197,6 +202,7 @@ pub fn run() {
         ))
         .manage(network_state)
         .invoke_handler(tauri::generate_handler![
+            quit_app,
             network::start_network,
             network::get_network_status,
             network::update_presence,

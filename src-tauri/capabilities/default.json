@@ -25,6 +25,7 @@
     "autostart:allow-enable",
     "autostart:allow-disable",
     "autostart:allow-is-enabled",
-    "allow-network"
+    "allow-network",
+    "allow-quit"
   ]
 }

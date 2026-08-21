@@ -239,6 +239,22 @@ html[data-platform="windows"] .esk-panel {
   color: var(--color-esk-text-muted);
 }
 
+.esk-quit {
+  padding: 0.2rem 0.45rem;
+  border-radius: 6px;
+  border: 1px solid rgb(255 255 255 / 0.1);
+  transition:
+    color 160ms var(--esk-ease),
+    border-color 160ms var(--esk-ease),
+    background-color 160ms var(--esk-ease);
+}
+
+.esk-quit:hover {
+  color: var(--color-esk-text-secondary);
+  border-color: rgb(255 255 255 / 0.18);
+  background: rgb(255 255 255 / 0.04);
+}
+
 .esk-focus-ring:focus-visible {
   outline: 1px solid var(--color-esk-border-strong);
   outline-offset: 2px;

@@ -28,6 +28,7 @@ type ExpandedPanelProps = {
   onUpdateStatus: (status: PresenceStatus) => Promise<void>;
   onPingPeer: (peerId: string) => void;
   onToggleAutostart: (enabled: boolean) => Promise<void>;
+  onQuit: () => void;
 };
 
 function initialFor(name: string): string {
@@ -48,6 +49,7 @@ export function ExpandedPanel({
   onUpdateStatus,
   onPingPeer,
   onToggleAutostart,
+  onQuit,
 }: ExpandedPanelProps) {
   const reduceMotion = useReducedMotion();
   const [editing, setEditing] = useState(false);
@@ -267,6 +269,23 @@ export function ExpandedPanel({
             <span className="esk-switch__thumb" />
           </button>
         </motion.label>
+
+        <motion.div
+          className="mt-2 flex items-center justify-between gap-3 px-0.5"
+          initial={false}
+          animate={visible ? { opacity: 1, y: 0 } : { opacity: 0, y: 6 }}
+          transition={stagger(0.14)}
+        >
+          <span className="esk-meta">Turn off</span>
+          <button
+            type="button"
+            onClick={onQuit}
+            className="esk-focus-ring esk-meta esk-quit"
+            aria-label="Quit eskusmi"
+          >
+            Quit
+          </button>
+        </motion.div>
       </div>
     </motion.section>
   );

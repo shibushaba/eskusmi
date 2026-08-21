@@ -1,0 +1,4 @@
+[[permission]]
+identifier = "allow-quit"
+description = "Allows quitting eskusmi from the panel"
+commands.allow = ["quit_app"]
