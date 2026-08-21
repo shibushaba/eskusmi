@@ -1,6 +1,9 @@
 //! Dismiss the expanded panel when the user clicks outside the HWND.
 //! Always-on-top widgets often keep focus, so a low-level mouse hook is
 //! more reliable than blur alone.
+//!
+//! Windows: WH_MOUSE_LL global hook.
+//! macOS / Linux: no-op here — frontend uses blur / onFocusChanged instead.
 
 use std::sync::OnceLock;
 

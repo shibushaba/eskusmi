@@ -1,7 +1,6 @@
 import { useReducedMotion } from "motion/react";
 import { DownloadButton } from "./components/DownloadButton";
 import { Hero } from "./components/Hero";
-import { APP_VERSION } from "./lib/version";
 
 export function App() {
   const reduceMotion = useReducedMotion();
@@ -47,9 +46,6 @@ export function App() {
           <div className="mt-6">
             <DownloadButton />
           </div>
-          <p className="mt-3 text-[0.68rem] tracking-wide text-[color:var(--color-esk-text-muted)]">
-            Windows · v{APP_VERSION}
-          </p>
         </section>
       </main>
 
@@ -61,7 +57,7 @@ export function App() {
           Interrupt, without interrupting.
         </p>
         <p className="mt-4 text-[0.64rem] tracking-wide text-[color:var(--color-esk-text-muted)]">
-          Windows · Local network · Free
+          Desktop · Local network · Free
         </p>
       </footer>
     </div>

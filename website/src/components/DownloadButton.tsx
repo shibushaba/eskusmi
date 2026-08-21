@@ -1,16 +1,24 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
-import { getDownloadUrl } from "../lib/download";
+import {
+  detectDownloadPlatform,
+  downloadLabel,
+  getDownloadUrl,
+  isDesktopPlatform,
+  platformCaption,
+} from "../lib/download";
 
 export function DownloadButton() {
   const reduceMotion = useReducedMotion();
-  const url = getDownloadUrl();
+  const platform = useMemo(() => detectDownloadPlatform(), []);
+  const url = useMemo(() => getDownloadUrl(platform), [platform]);
+  const canDownload = isDesktopPlatform(platform) && Boolean(url);
   const [status, setStatus] = useState<"idle" | "downloading" | "missing">(
     "idle",
   );
 
   function handleClick() {
-    if (!url) {
+    if (!canDownload || !url) {
       setStatus("missing");
       return;
     }
@@ -19,7 +27,8 @@ export function DownloadButton() {
     const anchor = document.createElement("a");
     anchor.href = url;
     anchor.rel = "noopener";
-    anchor.download = "";
+    // Let the browser navigate to the asset (works cross-origin for GitHub Releases).
+    anchor.target = "_blank";
     document.body.appendChild(anchor);
     anchor.click();
     anchor.remove();
@@ -31,23 +40,38 @@ export function DownloadButton() {
 
   const label =
     status === "downloading"
-      ? "Downloading eskusmi…"
-      : status === "missing"
-        ? "Download URL not configured"
-        : "Download eskusmi";
+      ? "Downloading…"
+      : status === "missing" && !canDownload
+        ? downloadLabel(platform)
+        : status === "missing"
+          ? "Download unavailable"
+          : downloadLabel(platform);
 
   return (
-    <motion.button
-      type="button"
-      className="esk-download"
-      disabled={status === "downloading"}
-      aria-label="Download eskusmi for Windows"
-      whileHover={reduceMotion || status === "downloading" ? undefined : { y: -1 }}
-      whileTap={reduceMotion || status === "downloading" ? undefined : { scale: 0.97 }}
-      transition={{ type: "spring", stiffness: 520, damping: 32, mass: 0.35 }}
-      onClick={handleClick}
-    >
-      {label}
-    </motion.button>
+    <div className="flex flex-col items-center">
+      <motion.button
+        type="button"
+        className="esk-download"
+        disabled={status === "downloading" || !canDownload}
+        aria-label={downloadLabel(platform)}
+        whileHover={
+          reduceMotion || status === "downloading" || !canDownload
+            ? undefined
+            : { y: -1 }
+        }
+        whileTap={
+          reduceMotion || status === "downloading" || !canDownload
+            ? undefined
+            : { scale: 0.97 }
+        }
+        transition={{ type: "spring", stiffness: 520, damping: 32, mass: 0.35 }}
+        onClick={handleClick}
+      >
+        {label}
+      </motion.button>
+      <p className="mt-3 max-w-xs text-[0.68rem] leading-relaxed tracking-wide text-[color:var(--color-esk-text-muted)]">
+        {platformCaption(platform)}
+      </p>
+    </div>
   );
 }

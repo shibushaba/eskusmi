@@ -9,7 +9,7 @@ import {
 } from "../lib/storage";
 
 /**
- * Single source of truth for Windows "Start with Windows".
+ * Launch-at-login preference (Windows / macOS / Linux via Tauri autostart).
  *
  * First successful launch: enable autostart once, then mark configured.
  * After the user toggles: respect their stored preference forever.

@@ -208,6 +208,12 @@ pub fn run() {
         .setup(|app| {
             let handle = app.handle().clone();
 
+            // Dockless tray-style widget on macOS (floats across Spaces better).
+            #[cfg(target_os = "macos")]
+            {
+                let _ = app.set_activation_policy(tauri::ActivationPolicy::Accessory);
+            }
+
             if let Err(err) = tray::setup_tray(&handle) {
                 eprintln!("[eskusmi] Tray setup failed: {err}");
             }
@@ -222,8 +228,8 @@ pub fn run() {
             let _ = window.set_size(tauri::Size::Logical(tauri::LogicalSize::new(60.0, 60.0)));
             place_bottom_right(&window);
 
-            // WebView2 is often not ready in setup — retry until DefaultBackgroundColor
-            // actually sticks, otherwise the orb sits on a white/gray square.
+            // WebView2 (and some Linux compositors) need a short delay before
+            // transparency / placement settles.
             let delayed = window.clone();
             std::thread::spawn(move || {
                 for ms in [50_u64, 150, 300, 800, 1600] {

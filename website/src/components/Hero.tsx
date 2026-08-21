@@ -75,9 +75,6 @@ export function Hero({ reduceMotion }: HeroProps) {
         className="mt-9 flex flex-col items-center"
       >
         <DownloadButton />
-        <p className="mt-3 text-[0.68rem] tracking-wide text-[color:var(--color-esk-text-muted)]">
-          Free · Windows · Local network
-        </p>
       </motion.div>
     </section>
   );

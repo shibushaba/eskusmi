@@ -252,12 +252,12 @@ export function ExpandedPanel({
           animate={visible ? { opacity: 1, y: 0 } : { opacity: 0, y: 6 }}
           transition={stagger(0.12)}
         >
-          <span className="esk-meta">Start with Windows</span>
+          <span className="esk-meta">Launch at login</span>
           <button
             type="button"
             role="switch"
             aria-checked={autostartEnabled}
-            aria-label="Start eskusmi with Windows"
+            aria-label="Launch eskusmi at login"
             data-on={autostartEnabled}
             onClick={() => {
               void onToggleAutostart(!autostartEnabled);

@@ -32,7 +32,7 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["nsis"],
+    "targets": "all",
     "publisher": "eskusmi",
     "category": "Utility",
     "shortDescription": "Interrupt, without interrupting.",
@@ -52,6 +52,9 @@
         "displayLanguageSelector": false,
         "compression": "lzma"
       }
+    },
+    "macOS": {
+      "minimumSystemVersion": "10.15"
     }
   }
 }

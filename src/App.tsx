@@ -11,6 +11,7 @@ import { usePing } from "./hooks/usePing";
 import { useUserProfile } from "./hooks/useUserProfile";
 import { useWidgetState } from "./hooks/useWidgetState";
 import { placeNearBottomRight, syncWindowToMode } from "./lib/window";
+import { applyHostPlatformClass } from "./lib/platform";
 
 function App() {
   const { profile, isLoading, saveProfile, updateName, updateStatus } =
@@ -38,13 +39,13 @@ function App() {
   const attentionShownRef = useRef(false);
 
   useEffect(() => {
+    applyHostPlatformClass();
     void placeNearBottomRight();
     if (!isTauri()) {
       return;
     }
     const win = getCurrentWindow();
-    // Belt-and-suspenders: kill Windows shadow that paints a gray square.
-    // Do NOT set an opaque backgroundColor on Windows — alpha is ignored there.
+    // Kill OS shadows that paint a gray square on transparent HWNDs.
     void win.setShadow(false).catch(() => undefined);
   }, []);
 

@@ -1,0 +1,177 @@
+name: Release desktop apps
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Build NSIS installer
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: eskusmi ${{ github.ref_name }}
+          releaseBody: |
+            Desktop builds for eskusmi (Windows, macOS, Linux).
+
+            - Windows: `eskusmi-setup.exe`
+            - macOS: `eskusmi.dmg`
+            - Linux: `eskusmi.AppImage`
+
+            **Interrupt, without interrupting.**
+          releaseDraft: false
+          prerelease: false
+          args: --bundles nsis
+
+      - name: Rename Windows installer
+        shell: pwsh
+        run: |
+          $bundle = Get-ChildItem -Path "src-tauri/target/release/bundle/nsis" -Filter "*setup.exe" | Select-Object -First 1
+          if (-not $bundle) { throw "NSIS installer not found" }
+          Copy-Item -Force $bundle.FullName (Join-Path $bundle.DirectoryName "eskusmi-setup.exe")
+
+      - name: Upload Windows artifact
+        uses: softprops/action-gh-release@v2
+        with:
+          files: src-tauri/target/release/bundle/nsis/eskusmi-setup.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Build macOS app + DMG
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: eskusmi ${{ github.ref_name }}
+          releaseDraft: false
+          prerelease: false
+          args: --bundles app,dmg
+
+      - name: Rename DMG
+        run: |
+          dmg=$(find src-tauri/target/release/bundle/dmg -name "*.dmg" | head -n 1)
+          if [ -z "$dmg" ]; then echo "DMG not found"; exit 1; fi
+          cp "$dmg" "$(dirname "$dmg")/eskusmi.dmg"
+
+      - name: Upload macOS artifact
+        uses: softprops/action-gh-release@v2
+        with:
+          files: src-tauri/target/release/bundle/dmg/eskusmi.dmg
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-linux:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            curl \
+            wget \
+            file \
+            libxdo-dev \
+            libssl-dev \
+            libwebkit2gtk-4.1-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            patchelf
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Build Linux bundles
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: eskusmi ${{ github.ref_name }}
+          releaseDraft: false
+          prerelease: false
+          args: --bundles deb,appimage
+
+      - name: Rename AppImage
+        run: |
+          appimage=$(find src-tauri/target/release/bundle/appimage -name "*.AppImage" | head -n 1)
+          if [ -z "$appimage" ]; then echo "AppImage not found"; exit 1; fi
+          cp "$appimage" "$(dirname "$appimage")/eskusmi.AppImage"
+
+      - name: Upload Linux artifacts
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            src-tauri/target/release/bundle/appimage/eskusmi.AppImage
+            src-tauri/target/release/bundle/deb/*.deb
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
