@@ -118,13 +118,35 @@ Override with `VITE_DOWNLOAD_URL` if needed (`website/.env.example`).
 ## Releases (GitHub Actions)
 
 ```bash
-git tag v0.1.0
-git push origin v0.1.0
+git tag v0.1.2
+git push origin v0.1.2
 ```
 
 Workflow: `.github/workflows/release.yml`
 
 Builds and uploads Windows, macOS, and Linux artifacts to the GitHub Release for that tag.
+
+### Windows Smart App Control / SmartScreen
+
+The NSIS installer is currently **unsigned**. Windows Smart App Control (and SmartScreen) will block downloads from the internet until the binary is Authenticode-signed with a trusted code-signing certificate (OV/EV or Azure Trusted Signing).
+
+To ship signed Windows builds:
+
+1. Buy a code-signing cert (or set up [Azure Trusted Signing](https://learn.microsoft.com/en-us/azure/trusted-signing/))
+2. Export a `.pfx` and add GitHub secrets:
+   - `WINDOWS_CERTIFICATE` — base64 of the `.pfx` (`certutil -encode cert.pfx out.txt`)
+   - `WINDOWS_CERTIFICATE_PASSWORD` — export password
+3. Set in `src-tauri/tauri.conf.json` → `bundle.windows`:
+
+```json
+"certificateThumbprint": "YOUR_THUMBPRINT",
+"digestAlgorithm": "sha256",
+"timestampUrl": "http://timestamp.digicert.com"
+```
+
+4. Tag a new release so CI rebuilds with signing enabled
+
+Until then, local `npm run build:windows` installs work fine (no browser Mark-of-the-Web).
 
 ## Two-computer LAN test
 
