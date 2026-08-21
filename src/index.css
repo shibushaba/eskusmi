@@ -59,8 +59,7 @@ body,
   width: 100%;
   height: 100%;
   overflow: hidden;
-  /* Opaque fill so WebView2 cannot show a second gray/white frame in
-     the corners outside CSS radius. HWND region clips the window shape. */
+  /* Match panel fill. Opaque corners + DWM rounding = no light ghost edges. */
   background: #111113 !important;
   font-family: var(--font-sans);
   color: var(--color-esk-text);
@@ -109,7 +108,7 @@ input {
     linear-gradient(180deg, rgb(255 255 255 / 0.055), transparent 34%),
     radial-gradient(ellipse 80% 50% at 0% 0%, rgb(255 255 255 / 0.04), transparent 50%),
     var(--color-esk-surface);
-  box-shadow: none;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08);
 }
 
 .esk-card {
@@ -261,11 +260,11 @@ input {
   box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.2);
 }
 
-/* —— Orb: physical brand object —— */
+/* —— Orb / tile: physical brand object —— */
 .eskusmi-orb {
   position: relative;
   isolation: isolate;
-  border-radius: 999px;
+  border-radius: 12px;
   border: 1px solid rgb(255 255 255 / 0.14);
   background:
     radial-gradient(circle at 32% 26%, rgb(255 255 255 / 0.14), transparent 42%),
@@ -296,11 +295,13 @@ input {
 .eskusmi-orb--brand {
   padding: 0;
   border: 0;
-  background: transparent;
+  background: #050506;
   box-shadow: none;
   isolation: auto;
   will-change: auto;
+  /* DWM rounds the HWND; keep the tile square so no transparent CSS corners leak. */
   border-radius: 0;
+  overflow: hidden;
 }
 
 .eskusmi-orb--brand::before {
@@ -311,11 +312,10 @@ input {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  border-radius: 0;
+  object-fit: cover;
   pointer-events: none;
   user-select: none;
-  /* Circular clip lives in the PNG alpha. CSS radius on a square
-     img still paints a rectangular layer on transparent Win32 HWNDs. */
 }
 
 .eskusmi-orb__mark {

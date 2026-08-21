@@ -53,10 +53,12 @@ fn harden_window_transparency(window: &tauri::WebviewWindow) {
             unsafe {
                 if let Ok(controller2) = webview.controller().cast::<ICoreWebView2Controller2>() {
                     let _ = controller2.SetDefaultBackgroundColor(COREWEBVIEW2_COLOR {
-                        R: 0,
-                        G: 0,
-                        B: 0,
-                        A: 0,
+                        // Match CSS surface — never leave clear pixels for the compositor
+                        // to fill with light corner triangles.
+                        R: 0x11,
+                        G: 0x11,
+                        B: 0x13,
+                        A: 255,
                     });
                 }
             }
@@ -78,8 +80,9 @@ fn harden_window_transparency(window: &tauri::WebviewWindow) {
                     &margins,
                 );
 
-                // Prevent DWM from rounding the HWND; we round in CSS so corners stay truly transparent.
-                let preference: u32 = 1; // DWMWCP_DONOTROUND
+                // Win11 DWM rounds with anti-aliasing. Prefer that over CSS-radius
+                // on a transparent HWND (ghost light corners) or SetWindowRgn (jagged).
+                let preference: u32 = 2; // DWMWCP_ROUND
                 let _ = windows::Win32::Graphics::Dwm::DwmSetWindowAttribute(
                     hwnd,
                     windows::Win32::Graphics::Dwm::DWMWA_WINDOW_CORNER_PREFERENCE,
@@ -146,10 +149,10 @@ unsafe fn strip_os_chrome(hwnd: windows::Win32::Foundation::HWND) {
             | WS_EX_WINDOWEDGE
             | WS_EX_DLGMODALFRAME
             | WS_EX_CLIENTEDGE
-            | WS_EX_STATICEDGE))
-        | WS_EX_TOOLWINDOW
-        | WS_EX_LAYERED
-        | WINDOW_EX_STYLE(0x0020_0000); // WS_EX_NOREDIRECTIONBITMAP
+            | WS_EX_STATICEDGE
+            | WS_EX_LAYERED
+            | WINDOW_EX_STYLE(0x0020_0000))) // WS_EX_NOREDIRECTIONBITMAP
+        | WS_EX_TOOLWINDOW;
     SetWindowLongPtrW(hwnd, GWL_EXSTYLE, ex.0 as isize);
 
     let _ = SetWindowPos(
@@ -168,29 +171,18 @@ unsafe fn apply_window_shape(
     hwnd: windows::Win32::Foundation::HWND,
     window: &tauri::WebviewWindow,
 ) {
-    use windows::Win32::Graphics::Gdi::{CreateEllipticRgn, CreateRoundRectRgn, SetWindowRgn};
+    use windows::Win32::Graphics::Gdi::SetWindowRgn;
 
     let Ok(size) = window.outer_size() else {
         return;
     };
-    let scale = window.scale_factor().unwrap_or(1.0);
-    let w = size.width as i32;
-    let h = size.height as i32;
-    if w <= 0 || h <= 0 {
+    if size.width == 0 || size.height == 0 {
         return;
     }
 
-    // Collapsed orb is 60×60 logical; treat anything near that as circular.
-    let orb_threshold = (78.0 * scale) as u32;
-    let region = if size.width <= orb_threshold && size.height <= orb_threshold {
-        CreateEllipticRgn(0, 0, w, h)
-    } else {
-        // Match CSS --esk-radius-lg (~18px logical).
-        let corner = ((18.0 * scale).round() as i32).max(8) * 2;
-        CreateRoundRectRgn(0, 0, w + 1, h + 1, corner, corner)
-    };
-
-    let _ = SetWindowRgn(hwnd, Some(region), true);
+    // Keep a rectangular client region. Soft rounding comes from
+    // DWMWA_WINDOW_CORNER_PREFERENCE (DWMWCP_ROUND), not GDI regions.
+    let _ = SetWindowRgn(hwnd, None, true);
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

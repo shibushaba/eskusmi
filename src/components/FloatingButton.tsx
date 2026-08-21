@@ -1,6 +1,7 @@
 import { useRef, type PointerEvent as ReactPointerEvent } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import appIcon from "../assets/app-icon.png";
+import { cn } from "../lib/cn";
 import { SPRING } from "../lib/motion";
 import { startWindowDrag } from "../lib/window";
 import type { PresenceStatus } from "../types/user";
@@ -79,17 +80,22 @@ export function FloatingButton({
       data-attention={attentionHint || undefined}
       onPointerDown={handlePointerDown}
       onClick={handleClick}
-      initial={reduceMotion ? false : { opacity: 0, scale: 0.88 }}
+      initial={false}
       animate={{ opacity: 1, scale: 1 }}
-      whileTap={reduceMotion ? undefined : { scale: 0.94 }}
+      whileTap={reduceMotion ? undefined : { scale: 0.97 }}
       transition={reduceMotion ? { duration: 0 } : SPRING.snappy}
-      className="h-full w-full bg-transparent p-0 outline-none"
+      className={cn(
+        "eskusmi-orb eskusmi-orb--brand",
+        `eskusmi-orb--${status}`,
+        attentionHint && "eskusmi-orb--attention",
+        "h-full w-full p-0 outline-none",
+      )}
     >
       <img
         src={appIcon}
         alt=""
         draggable={false}
-        className="pointer-events-none block h-full w-full select-none object-cover"
+        className="eskusmi-orb__icon"
       />
     </motion.button>
   );
