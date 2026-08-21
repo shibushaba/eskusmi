@@ -126,7 +126,7 @@ export function ExpandedPanel({
           initial={false}
           animate={visible ? { opacity: 1, y: 0 } : { opacity: 0, y: 8 }}
           transition={stagger(0.05)}
-          className="esk-card px-3 py-3"
+          className="esk-card shrink-0 px-3 py-3"
         >
           <div className="flex items-center gap-2.5">
             <motion.span
@@ -218,7 +218,7 @@ export function ExpandedPanel({
         </motion.div>
 
         <motion.div
-          className="mt-3.5 min-h-0 flex-1"
+          className="mt-3.5 flex min-h-0 flex-1 flex-col overflow-hidden"
           initial={false}
           animate={visible ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
           transition={stagger(0.09)}
@@ -231,61 +231,63 @@ export function ExpandedPanel({
           />
         </motion.div>
 
-        <AnimatePresence>
-          {pingFeedback ? (
-            <motion.p
-              key={pingFeedback}
-              initial={reduceMotion ? false : { opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -4 }}
-              transition={{ duration: MOTION.fast, ease: EASE.out }}
-              className="esk-meta mt-2 px-0.5"
-              role="status"
-              aria-live="polite"
+        <div className="mt-2 shrink-0">
+          <AnimatePresence>
+            {pingFeedback ? (
+              <motion.p
+                key={pingFeedback}
+                initial={reduceMotion ? false : { opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: MOTION.fast, ease: EASE.out }}
+                className="esk-meta mb-2 px-0.5"
+                role="status"
+                aria-live="polite"
+              >
+                {pingFeedback}
+              </motion.p>
+            ) : null}
+          </AnimatePresence>
+
+          <motion.label
+            className="flex cursor-pointer items-center justify-between gap-3 px-0.5"
+            initial={false}
+            animate={visible ? { opacity: 1, y: 0 } : { opacity: 0, y: 6 }}
+            transition={stagger(0.12)}
+          >
+            <span className="esk-meta">Launch at login</span>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={autostartEnabled}
+              aria-label="Launch eskusmi at login"
+              data-on={autostartEnabled}
+              onClick={() => {
+                void onToggleAutostart(!autostartEnabled);
+              }}
+              className="esk-focus-ring esk-switch"
             >
-              {pingFeedback}
-            </motion.p>
-          ) : null}
-        </AnimatePresence>
+              <span className="esk-switch__thumb" />
+            </button>
+          </motion.label>
 
-        <motion.label
-          className="mt-3 flex cursor-pointer items-center justify-between gap-3 px-0.5"
-          initial={false}
-          animate={visible ? { opacity: 1, y: 0 } : { opacity: 0, y: 6 }}
-          transition={stagger(0.12)}
-        >
-          <span className="esk-meta">Launch at login</span>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={autostartEnabled}
-            aria-label="Launch eskusmi at login"
-            data-on={autostartEnabled}
-            onClick={() => {
-              void onToggleAutostart(!autostartEnabled);
-            }}
-            className="esk-focus-ring esk-switch"
+          <motion.div
+            className="mt-2 flex items-center justify-between gap-3 px-0.5"
+            initial={false}
+            animate={visible ? { opacity: 1, y: 0 } : { opacity: 0, y: 6 }}
+            transition={stagger(0.14)}
           >
-            <span className="esk-switch__thumb" />
-          </button>
-        </motion.label>
-
-        <motion.div
-          className="mt-2 flex items-center justify-between gap-3 px-0.5"
-          initial={false}
-          animate={visible ? { opacity: 1, y: 0 } : { opacity: 0, y: 6 }}
-          transition={stagger(0.14)}
-        >
-          <span className="esk-meta">Turn off</span>
-          <button
-            type="button"
-            onClick={onQuit}
-            className="esk-focus-ring esk-meta esk-quit"
-            aria-label="Quit eskusmi"
-          >
-            Quit
-          </button>
-        </motion.div>
+            <span className="esk-meta">Turn off</span>
+            <button
+              type="button"
+              onClick={onQuit}
+              className="esk-focus-ring esk-meta esk-quit"
+              aria-label="Quit eskusmi"
+            >
+              Quit
+            </button>
+          </motion.div>
+        </div>
       </div>
     </motion.section>
   );

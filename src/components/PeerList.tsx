@@ -85,9 +85,9 @@ export function PeerList({
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <p className="esk-label mb-2 px-0.5">Nearby</p>
-      <div className="min-h-0 flex-1 space-y-1 overflow-y-auto pr-0.5 esk-scroll">
+    <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
+      <p className="esk-label mb-2 shrink-0 px-0.5">Nearby</p>
+      <div className="esk-scroll min-h-0 flex-1 space-y-1 overflow-y-auto overscroll-contain pr-0.5">
         {peers.map((peer) => (
           <PeerRow
             key={peer.id}
