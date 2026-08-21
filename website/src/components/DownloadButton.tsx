@@ -1,21 +1,35 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import {
   detectDownloadPlatform,
   downloadLabel,
-  getDownloadUrl,
   isDesktopPlatform,
   platformCaption,
+  resolveDownloadUrl,
 } from "../lib/download";
 
 export function DownloadButton() {
   const reduceMotion = useReducedMotion();
   const platform = useMemo(() => detectDownloadPlatform(), []);
-  const url = useMemo(() => getDownloadUrl(platform), [platform]);
-  const canDownload = isDesktopPlatform(platform) && Boolean(url);
+  const [url, setUrl] = useState<string | null>(null);
+  const [tag, setTag] = useState<string | undefined>(undefined);
   const [status, setStatus] = useState<"idle" | "downloading" | "missing">(
     "idle",
   );
+
+  useEffect(() => {
+    let cancelled = false;
+    void resolveDownloadUrl(platform).then((resolved) => {
+      if (cancelled) return;
+      setUrl(resolved?.url ?? null);
+      setTag(resolved?.tag);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [platform]);
+
+  const canDownload = isDesktopPlatform(platform) && Boolean(url);
 
   function handleClick() {
     if (!canDownload || !url) {
@@ -70,7 +84,7 @@ export function DownloadButton() {
         {label}
       </motion.button>
       <p className="mt-3 max-w-xs text-[0.68rem] leading-relaxed tracking-wide text-[color:var(--color-esk-text-muted)]">
-        {platformCaption(platform)}
+        {platformCaption(platform, tag)}
       </p>
     </div>
   );
