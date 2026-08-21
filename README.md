@@ -126,27 +126,24 @@ Workflow: `.github/workflows/release.yml`
 
 Builds and uploads Windows, macOS, and Linux artifacts to the GitHub Release for that tag.
 
-### Windows Smart App Control / SmartScreen
+### Windows SmartScreen / code signing
 
-The NSIS installer is currently **unsigned**. Windows Smart App Control (and SmartScreen) will block downloads from the internet until the binary is Authenticode-signed with a trusted code-signing certificate (OV/EV or Azure Trusted Signing).
+**Preferred free path:** [SignPath Foundation](https://signpath.org/) (open-source Authenticode).
 
-To ship signed Windows builds:
+1. Apply with repo `https://github.com/shibushaba/eskusmi`
+2. After approval, set `SIGNPATH_API_TOKEN` (secret) + `SIGNPATH_ORGANIZATION_ID` (variable)
+3. Tag a release — CI signs `eskusmi-setup.exe`
 
-1. Buy a code-signing cert (or set up [Azure Trusted Signing](https://learn.microsoft.com/en-us/azure/trusted-signing/))
-2. Export a `.pfx` and add GitHub secrets:
-   - `WINDOWS_CERTIFICATE` — base64 of the `.pfx` (`certutil -encode cert.pfx out.txt`)
-   - `WINDOWS_CERTIFICATE_PASSWORD` — export password
-3. Set in `src-tauri/tauri.conf.json` → `bundle.windows`:
+Full steps + policy text: [`docs/WINDOWS_SIGNING.md`](docs/WINDOWS_SIGNING.md).
 
-```json
-"certificateThumbprint": "YOUR_THUMBPRINT",
-"digestAlgorithm": "sha256",
-"timestampUrl": "http://timestamp.digicert.com"
-```
+**Until signing is live:** More info → **Run anyway**.
 
-4. Tag a new release so CI rebuilds with signing enabled
+#### Code signing policy
 
-Until then, local `npm run build:windows` installs work fine (no browser Mark-of-the-Web).
+Free code signing provided by SignPath.io, certificate by SignPath Foundation.
+
+- Committers/reviewers: [repository collaborators](https://github.com/shibushaba/eskusmi/settings/access)
+- Approvers: [repository owners](https://github.com/shibushaba/eskusmi/settings/access)
 
 ## Two-computer LAN test
 
@@ -155,10 +152,6 @@ Until then, local `npm run build:windows` installs work fine (no browser Mark-of
 3. Each should list the other under **Nearby**  
 4. Ping → attention → **Got it** → acknowledgement  
 5. Reboot both — eskusmi should launch at login and rediscover  
-
-## Trust note
-
-**eskusmi trusts the local network.** Do not use it on untrusted networks.
 
 ## Stack
 
