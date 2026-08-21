@@ -1,5 +1,5 @@
 /** GitHub Releases artifacts from the multi-OS release workflow. */
-export const ESKUSMI_RELEASE_TAG = "v0.1.2";
+export const ESKUSMI_RELEASE_TAG = "v0.1.3";
 
 const RELEASE_BASE = `https://github.com/shibushaba/eskusmi/releases/download/${ESKUSMI_RELEASE_TAG}`;
 
