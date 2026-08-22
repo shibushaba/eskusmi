@@ -9,12 +9,12 @@ permissions:
   contents: write
   actions: read
 
-# Keep the GitHub Release as a draft until every OS build finishes uploading.
-# Otherwise macOS can publish "latest" first and Windows download links 404.
+# Build with `npm run build:*` (not tauri-action) so parallel OS jobs do not
+# race creating/updating the same GitHub Release. Each job uploads artifacts;
+# publish flips the draft release live when all three finish.
 
 jobs:
   build-windows:
-    # Pin 2022 so SignTool / Trusted Signing paths stay stable on runners.
     runs-on: windows-2022
     env:
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
@@ -46,8 +46,6 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci
 
-      # Preferred: Azure Trusted Signing / Artifact Signing (clears SmartScreen).
-      # Secrets: docs/WINDOWS_SIGNING.md
       - name: Enable Azure Trusted Signing
         if: ${{ env.AZURE_CLIENT_ID != '' && env.AZURE_CLIENT_SECRET != '' && env.AZURE_TENANT_ID != '' && env.AZURE_TRUSTED_SIGNING_ENDPOINT != '' && env.AZURE_TRUSTED_SIGNING_ACCOUNT != '' && env.AZURE_TRUSTED_SIGNING_CERTIFICATE_PROFILE != '' }}
         shell: pwsh
@@ -59,7 +57,6 @@ jobs:
           node -e "const fs=require('fs');const p='src-tauri/tauri.conf.json';const c=JSON.parse(fs.readFileSync(p,'utf8'));c.bundle=c.bundle||{};c.bundle.windows=c.bundle.windows||{};c.bundle.windows.signCommand=process.env.SIGN_COMMAND;fs.writeFileSync(p,JSON.stringify(c,null,2)+'\n');"
           Write-Host "Windows Authenticode signing enabled via Azure Trusted Signing."
 
-      # Fallback: classic .pfx in the certificate store (OV/EV export).
       - name: Import Windows PFX certificate
         if: ${{ env.WINDOWS_CERTIFICATE != '' && env.WINDOWS_CERTIFICATE_PASSWORD != '' && env.AZURE_CLIENT_ID == '' }}
         shell: pwsh
@@ -77,31 +74,9 @@ jobs:
           Write-Host "Windows Authenticode signing enabled via PFX thumbprint $($cert.Thumbprint)"
 
       - name: Build NSIS installer
-        uses: tauri-apps/tauri-action@v0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          AZURE_TENANT_ID: ${{ env.AZURE_TENANT_ID }}
-          AZURE_CLIENT_ID: ${{ env.AZURE_CLIENT_ID }}
-          AZURE_CLIENT_SECRET: ${{ env.AZURE_CLIENT_SECRET }}
-        with:
-          tagName: ${{ github.ref_name }}
-          releaseName: eskusmi ${{ github.ref_name }}
-          releaseBody: |
-            Desktop builds for eskusmi (Windows, macOS, Linux).
-
-            - Windows: `eskusmi-setup.exe`
-            - macOS: `eskusmi.dmg`
-            - Linux: `eskusmi.AppImage`
-
-            **Windows note:** If SmartScreen says “Windows protected your PC”, click **More info → Run anyway** until the Windows build is code-signed (see `docs/WINDOWS_SIGNING.md`).
-
-            **Interrupt, without interrupting.**
-          releaseDraft: true
-          prerelease: false
-          args: --bundles nsis
+        run: npm run build:windows
 
       - name: Stage Windows installer
-        id: stage_installer
         shell: pwsh
         run: |
           $setup = "src-tauri/target/release/bundle/nsis/eskusmi-setup.exe"
@@ -115,9 +90,6 @@ jobs:
           Copy-Item -Force $bundle.FullName $setup
           Write-Host "Staged $($bundle.Name) -> eskusmi-setup.exe"
 
-      # Free OSS signing via SignPath Foundation (preferred when Azure/PFX not configured).
-      # Enable by setting repo variable SIGNPATH_ORGANIZATION_ID + secret SIGNPATH_API_TOKEN.
-      # Docs: docs/WINDOWS_SIGNING.md
       - name: Upload unsigned installer for SignPath
         if: ${{ vars.SIGNPATH_ORGANIZATION_ID != '' && env.AZURE_CLIENT_ID == '' && env.WINDOWS_CERTIFICATE == '' }}
         id: upload-unsigned
@@ -204,15 +176,7 @@ jobs:
         run: npm ci
 
       - name: Build macOS app + DMG
-        uses: tauri-apps/tauri-action@v0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tagName: ${{ github.ref_name }}
-          releaseName: eskusmi ${{ github.ref_name }}
-          releaseDraft: true
-          prerelease: false
-          args: --bundles app,dmg
+        run: npm run build:macos
 
       - name: Rename DMG
         run: |
@@ -257,7 +221,8 @@ jobs:
             libwebkit2gtk-4.1-dev \
             libayatana-appindicator3-dev \
             librsvg2-dev \
-            patchelf
+            patchelf \
+            libfuse2
 
       - name: Rust cache
         uses: swatinem/rust-cache@v2
@@ -268,15 +233,7 @@ jobs:
         run: npm ci
 
       - name: Build Linux bundles
-        uses: tauri-apps/tauri-action@v0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tagName: ${{ github.ref_name }}
-          releaseName: eskusmi ${{ github.ref_name }}
-          releaseDraft: true
-          prerelease: false
-          args: --bundles deb,appimage
+        run: npm run build:linux
 
       - name: Rename AppImage
         run: |

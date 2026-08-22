@@ -96,7 +96,7 @@ Close/hide keeps the process in the tray. **Quit eskusmi** exits.
 
 Re-running the latest installer **removes the previous version first**, then installs the new build:
 
-- **Windows:** NSIS quits eskusmi and runs a silent uninstall before copying files. The copy-install script does the same before launching setup.
+- **Windows:** copy-install quits eskusmi and runs a silent uninstall before launching setup. The NSIS installer also replaces files in the same install folder.
 - **macOS:** copy-install quits eskusmi, deletes `/Applications/eskusmi.app`, then copies the new app from the DMG.
 - **Linux:** copy-install quits eskusmi, replaces `~/Applications/eskusmi.AppImage`, then launches the new file.
 
