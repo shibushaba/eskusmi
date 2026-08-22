@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { cn } from "../lib/cn";
+import { autostartCopy, detectHostPlatform } from "../lib/platform";
 import { EASE, MOTION, SPRING } from "../lib/motion";
 import { statusHint } from "../lib/status";
 import type { PresenceStatus, UserProfile } from "../types/user";
@@ -52,6 +53,7 @@ export function ExpandedPanel({
   onQuit,
 }: ExpandedPanelProps) {
   const reduceMotion = useReducedMotion();
+  const autostart = autostartCopy(detectHostPlatform());
   const [editing, setEditing] = useState(false);
   const [draftName, setDraftName] = useState(profile.name);
 
@@ -250,27 +252,32 @@ export function ExpandedPanel({
             ) : null}
           </AnimatePresence>
 
-          <motion.label
-            className="flex cursor-pointer items-center justify-between gap-3 px-0.5"
+          <motion.div
+            className="flex items-center justify-between gap-3 px-0.5"
             initial={false}
             animate={visible ? { opacity: 1, y: 0 } : { opacity: 0, y: 6 }}
             transition={stagger(0.12)}
           >
-            <span className="esk-meta">Launch at login</span>
+            <div className="min-w-0">
+              <span className="esk-meta">{autostart.label}</span>
+              <p className="mt-0.5 text-[0.62rem] leading-snug text-[color:var(--color-esk-text-muted)]">
+                {autostart.hint}
+              </p>
+            </div>
             <button
               type="button"
               role="switch"
               aria-checked={autostartEnabled}
-              aria-label="Launch eskusmi at login"
+              aria-label={`${autostart.label} for eskusmi`}
               data-on={autostartEnabled}
               onClick={() => {
                 void onToggleAutostart(!autostartEnabled);
               }}
-              className="esk-focus-ring esk-switch"
+              className="esk-focus-ring esk-switch shrink-0"
             >
               <span className="esk-switch__thumb" />
             </button>
-          </motion.label>
+          </motion.div>
 
           <motion.div
             className="mt-2 flex items-center justify-between gap-3 px-0.5"

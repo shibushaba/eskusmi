@@ -74,9 +74,9 @@ npm run build:linux     # .deb + AppImage
 
 1. App launches after install (or via `tauri dev`)  
 2. Name setup (if no profile yet)  
-3. On **first successful launch**, eskusmi enables **Launch at login** once  
-4. Later launches: start quietly as the floating icon (Available), tray stays alive  
-5. Toggle **Launch at login** in the panel anytime  
+3. On **first successful launch**, eskusmi enables **start at login** on Windows, macOS, and Linux
+4. Later launches: start quietly as the floating icon (Available), tray stays alive
+5. Toggle **Start at login** in the panel anytime (Windows registry · macOS Login Items · Linux autostart)
 
 Profile store (via Tauri plugin-store), roughly:
 
@@ -91,6 +91,16 @@ Profile store (via Tauri plugin-store), roughly:
 - Quit eskusmi  
 
 Close/hide keeps the process in the tray. **Quit eskusmi** exits.
+
+### Upgrading (replace an older install)
+
+Re-running the latest installer **removes the previous version first**, then installs the new build:
+
+- **Windows:** NSIS quits eskusmi and runs a silent uninstall before copying files. The copy-install script does the same before launching setup.
+- **macOS:** copy-install quits eskusmi, deletes `/Applications/eskusmi.app`, then copies the new app from the DMG.
+- **Linux:** copy-install quits eskusmi, replaces `~/Applications/eskusmi.AppImage`, then launches the new file.
+
+Your profile and settings are kept (stored outside the install folder).
 
 ### Network
 

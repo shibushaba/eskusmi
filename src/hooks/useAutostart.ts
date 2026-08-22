@@ -31,16 +31,18 @@ export function useAutostart() {
         const configured = await loadAutostartConfigured();
 
         if (!configured) {
-          // First run — product default is ON.
+          // First run — product default is ON on Windows, macOS, and Linux.
+          let enabledOnOs = false;
           try {
             await enable();
+            enabledOnOs = await isEnabled();
           } catch (error) {
             console.error("[eskusmi] first-run autostart enable failed", error);
           }
-          await saveAutostartPreference(true);
+          await saveAutostartPreference(enabledOnOs);
           await markAutostartConfigured();
           if (!cancelled) {
-            setEnabled(true);
+            setEnabled(enabledOnOs);
           }
           return;
         }
@@ -77,6 +79,7 @@ export function useAutostart() {
   }, []);
 
   const setAutostart = async (next: boolean) => {
+    const previous = enabled;
     setEnabled(next);
     await saveAutostartPreference(next);
 
@@ -90,8 +93,15 @@ export function useAutostart() {
       } else {
         await disable();
       }
+
+      const synced = await isEnabled();
+      if (synced !== next) {
+        throw new Error(`autostart state mismatch (wanted ${next}, got ${synced})`);
+      }
     } catch (error) {
       console.error("[eskusmi] autostart toggle failed", error);
+      setEnabled(previous);
+      await saveAutostartPreference(previous);
     }
   };
 

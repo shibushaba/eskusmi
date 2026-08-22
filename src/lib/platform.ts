@@ -21,3 +21,32 @@ export function applyHostPlatformClass(): HostPlatform {
   document.documentElement.dataset.platform = platform;
   return platform;
 }
+
+/** Panel copy for the launch-at-login toggle (Windows / macOS / Linux). */
+export function autostartCopy(platform: HostPlatform): {
+  label: string;
+  hint: string;
+} {
+  switch (platform) {
+    case "windows":
+      return {
+        label: "Start at login",
+        hint: "Starts with Windows when you sign in",
+      };
+    case "macos":
+      return {
+        label: "Open at login",
+        hint: "Adds eskusmi to Login Items",
+      };
+    case "linux":
+      return {
+        label: "Start at login",
+        hint: "Adds a desktop autostart entry",
+      };
+    default:
+      return {
+        label: "Launch at login",
+        hint: "Starts automatically when you sign in",
+      };
+  }
+}
