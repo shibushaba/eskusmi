@@ -2,7 +2,7 @@
   "name": "eskusmi",
   "private": true,
   "license": "MIT",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -12,7 +12,6 @@
     "build:installer": "tauri build --bundles nsis",
     "build:windows": "tauri build --bundles nsis",
     "build:macos": "tauri build --bundles app,dmg",
-    "build:linux": "tauri build --bundles deb,appimage",
     "website:dev": "npm --prefix website run dev",
     "website:build": "npm --prefix website run build",
     "website:preview": "npm --prefix website run preview"

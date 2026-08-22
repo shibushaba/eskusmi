@@ -9,7 +9,7 @@ import {
 } from "../lib/storage";
 
 /**
- * Launch-at-login preference (Windows / macOS / Linux via Tauri autostart).
+ * Launch-at-login preference (Windows / macOS via Tauri autostart).
  *
  * First successful launch: enable autostart once, then mark configured.
  * After the user toggles: respect their stored preference forever.
@@ -31,7 +31,7 @@ export function useAutostart() {
         const configured = await loadAutostartConfigured();
 
         if (!configured) {
-          // First run — product default is ON on Windows, macOS, and Linux.
+          // First run — product default is ON on Windows and macOS.
           let enabledOnOs = false;
           try {
             await enable();

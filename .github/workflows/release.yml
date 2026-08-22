@@ -10,8 +10,7 @@ permissions:
   actions: read
 
 # Build with `npm run build:*` (not tauri-action) so parallel OS jobs do not
-# race creating/updating the same GitHub Release. Each job uploads artifacts;
-# publish flips the draft release live when all three finish.
+# race creating/updating the same GitHub Release. Windows + macOS only.
 
 jobs:
   build-windows:
@@ -193,67 +192,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  build-linux:
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: npm
-
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Install Linux dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            build-essential \
-            curl \
-            wget \
-            file \
-            libxdo-dev \
-            libssl-dev \
-            libwebkit2gtk-4.1-dev \
-            libayatana-appindicator3-dev \
-            librsvg2-dev \
-            patchelf \
-            libfuse2
-
-      - name: Rust cache
-        uses: swatinem/rust-cache@v2
-        with:
-          workspaces: src-tauri -> target
-
-      - name: Install frontend dependencies
-        run: npm ci
-
-      - name: Build Linux bundles
-        run: npm run build:linux
-
-      - name: Rename AppImage
-        run: |
-          appimage=$(find src-tauri/target/release/bundle/appimage -name "*.AppImage" | head -n 1)
-          if [ -z "$appimage" ]; then echo "AppImage not found"; exit 1; fi
-          cp "$appimage" "$(dirname "$appimage")/eskusmi.AppImage"
-
-      - name: Upload Linux artifacts
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ github.ref_name }}
-          draft: true
-          files: |
-            src-tauri/target/release/bundle/appimage/eskusmi.AppImage
-            src-tauri/target/release/bundle/deb/*.deb
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   publish:
-    needs: [build-windows, build-macos, build-linux]
+    needs: [build-windows, build-macos]
     runs-on: ubuntu-latest
     steps:
       - name: Publish GitHub Release
@@ -264,11 +204,10 @@ jobs:
           draft: false
           prerelease: false
           body: |
-            Desktop builds for eskusmi (Windows, macOS, Linux).
+            Desktop builds for eskusmi (Windows and macOS).
 
             - Windows: `eskusmi-setup.exe`
             - macOS: `eskusmi.dmg`
-            - Linux: `eskusmi.AppImage`
 
             **Windows:** If SmartScreen says “Windows protected your PC”, click **More info → Run anyway** until the Windows build is code-signed (`docs/WINDOWS_SIGNING.md`).
 

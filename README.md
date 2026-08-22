@@ -4,7 +4,7 @@
 
 A tiny local attention network for people working around you. Devices on the same LAN discover each other and can send a calm visual ping — even when someone is deep in focus with headphones on.
 
-Runs on **Windows**, **macOS**, and **Linux**.
+Runs on **Windows** and **macOS**.
 
 ## What’s in this repo
 
@@ -37,15 +37,6 @@ Current version: **0.1.0**
 
 **macOS:** Xcode Command Line Tools  
 
-**Linux (Debian/Ubuntu):**
-
-```bash
-sudo apt update
-sudo apt install -y \
-  build-essential curl wget file libxdo-dev libssl-dev \
-  libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf
-```
-
 ### Develop
 
 ```bash
@@ -67,22 +58,20 @@ Binary lands under `src-tauri/target/release/` (`eskusmi.exe` on Windows, `eskus
 ```bash
 npm run build:windows   # NSIS → *.exe
 npm run build:macos     # .app + .dmg
-npm run build:linux     # .deb + AppImage
 ```
 
 ### First launch & autostart
 
 1. App launches after install (or via `tauri dev`)  
 2. Name setup (if no profile yet)  
-3. On **first successful launch**, eskusmi enables **start at login** on Windows, macOS, and Linux
+3. On **first successful launch**, eskusmi enables **start at login** on Windows and macOS
 4. Later launches: start quietly as the floating icon (Available), tray stays alive
-5. Toggle **Start at login** in the panel anytime (Windows registry · macOS Login Items · Linux autostart)
+5. Toggle **Start at login** in the panel anytime (Windows registry · macOS Login Items)
 
 Profile store (via Tauri plugin-store), roughly:
 
 - Windows: `%APPDATA%\com.eskusmi.desktop\`  
-- macOS: `~/Library/Application Support/com.eskusmi.desktop/`  
-- Linux: `~/.local/share/com.eskusmi.desktop/`
+- macOS: `~/Library/Application Support/com.eskusmi.desktop/`
 
 ### Tray
 
@@ -96,9 +85,8 @@ Close/hide keeps the process in the tray. **Quit eskusmi** exits.
 
 Re-running the latest installer **removes the previous version first**, then installs the new build:
 
-- **Windows:** copy-install quits eskusmi and runs a silent uninstall before launching setup. The NSIS installer also replaces files in the same install folder.
+- **Windows:** copy-install quits eskusmi and runs a silent uninstall before launching setup.
 - **macOS:** copy-install quits eskusmi, deletes `/Applications/eskusmi.app`, then copies the new app from the DMG.
-- **Linux:** copy-install quits eskusmi, replaces `~/Applications/eskusmi.AppImage`, then launches the new file.
 
 Your profile and settings are kept (stored outside the install folder).
 
@@ -121,7 +109,6 @@ The CTA picks a download for the visitor’s OS from GitHub Releases:
 | --- | --- |
 | Windows | `eskusmi-setup.exe` |
 | macOS | `eskusmi.dmg` |
-| Linux | `eskusmi.AppImage` |
 
 Override with `VITE_DOWNLOAD_URL` if needed (`website/.env.example`).
 
@@ -134,7 +121,7 @@ git push origin v0.1.2
 
 Workflow: `.github/workflows/release.yml`
 
-Builds and uploads Windows, macOS, and Linux artifacts to the GitHub Release for that tag.
+Builds and uploads Windows and macOS artifacts to the GitHub Release for that tag.
 
 ### Windows SmartScreen / code signing
 
@@ -167,4 +154,4 @@ Free code signing provided by SignPath.io, certificate by SignPath Foundation.
 
 - Tauri 2 + Rust (`tray-icon`, autostart, store)  
 - React + TypeScript + Vite + Tailwind v4 + Motion  
-- Bundles: NSIS (Windows), DMG (macOS), deb + AppImage (Linux)  
+- Bundles: NSIS (Windows), DMG (macOS)  

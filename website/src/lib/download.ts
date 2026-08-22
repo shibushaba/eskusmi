@@ -1,5 +1,5 @@
-/** GitHub Releases artifacts from the multi-OS release workflow. */
-export const ESKUSMI_PREFERRED_TAG = "v0.1.9";
+/** GitHub Releases artifacts from the release workflow. */
+export const ESKUSMI_PREFERRED_TAG = "v0.1.10";
 /** @deprecated use ESKUSMI_PREFERRED_TAG — kept for older imports */
 export const ESKUSMI_RELEASE_TAG = ESKUSMI_PREFERRED_TAG;
 
@@ -9,7 +9,6 @@ const RELEASES_API =
 export type DownloadPlatform =
   | "windows"
   | "macos"
-  | "linux"
   | "ios"
   | "android"
   | "unknown";
@@ -25,13 +24,9 @@ type NavUAData = {
 type GhAsset = { name?: string; browser_download_url?: string };
 type GhRelease = { tag_name?: string; draft?: boolean; assets?: GhAsset[] };
 
-const ASSET_BY_PLATFORM: Record<
-  "windows" | "macos" | "linux" | "unknown",
-  string
-> = {
+const ASSET_BY_PLATFORM: Record<"windows" | "macos" | "unknown", string> = {
   windows: "eskusmi-setup.exe",
   macos: "eskusmi.dmg",
-  linux: "eskusmi.AppImage",
   unknown: "eskusmi-setup.exe",
 };
 
@@ -69,12 +64,6 @@ export function detectDownloadPlatform(): DownloadPlatform {
   ) {
     return "macos";
   }
-  if (
-    platformHint.includes("linux") ||
-    (/Linux|X11/i.test(ua) && !/Android/i.test(ua))
-  ) {
-    return "linux";
-  }
 
   return "unknown";
 }
@@ -89,7 +78,7 @@ function envUrl(name: string): string | undefined {
 }
 
 function fallbackUrl(
-  platform: "windows" | "macos" | "linux" | "unknown",
+  platform: "windows" | "macos" | "unknown",
 ): string {
   const asset = ASSET_BY_PLATFORM[platform];
   return `https://github.com/shibushaba/eskusmi/releases/latest/download/${asset}`;
@@ -106,14 +95,15 @@ export async function resolveDownloadUrl(
     return null;
   }
 
+  const desktopPlatform =
+    platform === "macos" ? "macos" : platform === "windows" ? "windows" : "unknown";
+
   const envOverride =
-    platform === "windows"
+    desktopPlatform === "windows"
       ? envUrl("VITE_DOWNLOAD_URL_WINDOWS")
-      : platform === "macos"
+      : desktopPlatform === "macos"
         ? envUrl("VITE_DOWNLOAD_URL_MACOS")
-        : platform === "linux"
-          ? envUrl("VITE_DOWNLOAD_URL_LINUX")
-          : envUrl("VITE_DOWNLOAD_URL") ?? envUrl("VITE_DOWNLOAD_URL_WINDOWS");
+        : envUrl("VITE_DOWNLOAD_URL") ?? envUrl("VITE_DOWNLOAD_URL_WINDOWS");
   if (envOverride) {
     return { url: envOverride, tag: ESKUSMI_PREFERRED_TAG };
   }
@@ -130,7 +120,7 @@ export async function resolveDownloadUrl(
       throw new Error(`release fetch ${res.status}`);
     }
     const releases = ((await res.json()) as GhRelease[]).filter((r) => !r.draft);
-    const assetName = ASSET_BY_PLATFORM[platform];
+    const assetName = ASSET_BY_PLATFORM[desktopPlatform];
 
     const preferred = releases.find((r) => r.tag_name === ESKUSMI_PREFERRED_TAG);
     const preferredHit = preferred?.assets?.find((a) => a.name === assetName);
@@ -151,7 +141,7 @@ export async function resolveDownloadUrl(
     // fall through to latest shortcut
   }
 
-  return { url: fallbackUrl(platform), tag: "latest" };
+  return { url: fallbackUrl(desktopPlatform), tag: "latest" };
 }
 
 /**
@@ -171,9 +161,6 @@ export function getDownloadUrl(
   if (platform === "macos") {
     return envUrl("VITE_DOWNLOAD_URL_MACOS") ?? fallbackUrl("macos");
   }
-  if (platform === "linux") {
-    return envUrl("VITE_DOWNLOAD_URL_LINUX") ?? fallbackUrl("linux");
-  }
 
   return (
     envUrl("VITE_DOWNLOAD_URL") ??
@@ -184,11 +171,10 @@ export function getDownloadUrl(
 
 export function isDesktopPlatform(
   platform: DownloadPlatform,
-): platform is "windows" | "macos" | "linux" | "unknown" {
+): platform is "windows" | "macos" | "unknown" {
   return (
     platform === "windows" ||
     platform === "macos" ||
-    platform === "linux" ||
     platform === "unknown"
   );
 }
@@ -197,8 +183,6 @@ export function downloadLabel(platform: DownloadPlatform): string {
   switch (platform) {
     case "macos":
       return "Download for macOS";
-    case "linux":
-      return "Download for Linux";
     case "windows":
       return "Download for Windows";
     case "ios":
@@ -216,14 +200,12 @@ export function platformCaption(
   switch (platform) {
     case "macos":
       return `${tag} · macOS build`;
-    case "linux":
-      return `${tag} · Linux build`;
     case "windows":
       return `${tag} · Windows installer`;
     case "ios":
     case "android":
       return "eskusmi is a desktop app — open this page on your computer";
     default:
-      return `${tag} · Windows · macOS · Linux`;
+      return `${tag} · Windows · macOS`;
   }
 }
