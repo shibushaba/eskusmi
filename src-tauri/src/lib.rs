@@ -190,18 +190,20 @@ unsafe fn apply_window_shape(
     let _ = SetWindowRgn(hwnd, None, true);
 }
 
+fn autostart_plugin<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
+    let builder = tauri_plugin_autostart::Builder::new().app_name("eskusmi");
+    #[cfg(target_os = "macos")]
+    let builder = builder.macos_launcher(tauri_plugin_autostart::MacosLauncher::LaunchAgent);
+    builder.build()
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let network_state = NetworkState::new().expect("failed to init network state");
 
     tauri::Builder::default()
         .plugin(tauri_plugin_store::Builder::new().build())
-        .plugin(
-            tauri_plugin_autostart::Builder::new()
-                .app_name("eskusmi")
-                .macos_launcher(tauri_plugin_autostart::MacosLauncher::LaunchAgent)
-                .build(),
-        )
+        .plugin(autostart_plugin())
         .manage(network_state)
         .invoke_handler(tauri::generate_handler![
             quit_app,
